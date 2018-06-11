@@ -1,5 +1,6 @@
 # Load basic modules
 import sys
+import glob
 import os, os.path
 import numpy as np
 import argparse
@@ -54,8 +55,9 @@ def curate_data_with_model(data, model_path):
 
 
 def write_array_to_file(curated_labels, file_name):
+    file_name = file_name + '_curated_labels_.pickle'
     # Re-pickle our numpy array and write to path
-    with open(file_name, 'wb') as handle:
+    with file_io.FileIO(file_name), mode='wb') as handle:
         pickle.dump(curated_array, handle)
 
 
@@ -71,7 +73,20 @@ if __name__ == '__main__':
                         help='Full path including file name of NP dataset',
                         required=True
                         )
-    #Run main functions
-    im_data = load_image_data(cloud_data_path)
-    c_labels = curate_data_with_model(im_data, s_model_path)
-    write_array_to_file(c_labels, 'curated_labels.pickle')
+    # What to call labels
+    parser.add_argument('job_name',
+                        help='Used to name label file after job',
+                        required=True
+                        )
+    # Run main functions
+    datasets = file_io.get_matching_files('*.pickle')
+    numData = len(datasets)
+    total_c_labels = []
+    for num in range(0, numData):
+        current_dataset = job_name + '_image_dataset_' + num + '.pickle'
+        data_path = cloud_data_path + current_dataset
+        im_data = load_image_data(data_path)
+        c_labels = curate_data_with_model(im_data, s_model_path)
+        total_c_labels = c_labels.append(c_labels)
+    # Write total label set to file
+    write_array_to_file(total_c_labels, job_name)

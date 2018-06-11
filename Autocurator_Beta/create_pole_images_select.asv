@@ -13,7 +13,7 @@ function create_pole_images_select(videoDir, saveDir, contacts)
 
   % Check other input options and set defaults ---------------------------------
   % DEFAULTS
-  runParallel = true; % Use parpool
+  runParallel = false; % Use parpool
   samplePoleImage = 'C:\SuperUser\Code\ML_whisker_image_dev\samplePoleMat'; % Picture of pole for correlation
   otherTempDir = false; % Whether to create a temp directory separate from image dir
   maxFrames = 3900;
@@ -51,9 +51,9 @@ function create_pole_images_select(videoDir, saveDir, contacts)
   if runParallel == true
     %Parallel stuff
     parfor i = 1:length(contacts)
-      tNum = contacts{i}.trialNum;
+      nTempDir = [tempDir '_' num2str(i)];
       cVid = [videoDir filesep videoList{i}];
-      process_video(cVid, ffPath,...
+      process_video(cVid, saveDir, ffPath,...
                     samplePoleMat, testFrameNumber,...
                     saveDir, contacts);
     end
@@ -62,7 +62,7 @@ function create_pole_images_select(videoDir, saveDir, contacts)
     for i = 1:length(contacts)
       tNum = contacts{i}.trialNum;
       cVid = [videoDir filesep videoList{i}];
-      process_video(cVid, ffPath,...
+      process_video(cVid, saveDir, ffPath,...
                     samplePoleMat, testFrameNumber,...
                     saveDir, contacts);
     end
@@ -71,7 +71,7 @@ function create_pole_images_select(videoDir, saveDir, contacts)
 end % ==========================================================================
 
 % Actual video processing occurs here
-function process_video(videoName, ffPath,...
+function process_video(videoName, tempLocation, ffPath,...
                        samplePoleMat, tFrameNum,...
                        saveDir, cArray)
   % Section of preprocessing for matching ---------------------------------
@@ -86,7 +86,7 @@ function process_video(videoName, ffPath,...
   tNum = [];
   for i = 1:length(cArray)
       if vidNumber == cArray{i}.trialNum
-          tNum = i; 
+          tNum = cArray{i}.trialNum; 
       end 
   end
   
@@ -97,23 +97,17 @@ function process_video(videoName, ffPath,...
   end
 
   % Make temp images ------------------------------------------------------
+  % Create directory for writing temp images and final images
+  system(['mkdir ' tempLocation]);
+  system(['mkdir ' 
   % Create image filename for image stack
   [~,imFileName,~] = fileparts(videoName);
-  
-  % Create directory for writing temp images 
-  tempLocation = [saveDir filesep imFileName '_Temp'];
-  system(['mkdir ' tempLocation]);
-  
   % Use ffmpeg to convert video to tiff stack
   ffCmd = sprintf('%s -i %s -b:v 800k %s%s%s_',...
                    ffPath, videoName, tempLocation, filesep, imFileName);
   ffCmd = [ffCmd '%05d.png'];
   system(ffCmd);
   imList = dir([tempLocation '/*.png']);
-  
-  % Create directory for final image save
-  saveLocation = [saveDir filesep imFileName];
-  system(['mkdir ' saveLocation]);
 
   % Find pole location in this video --------------------------------------
   testFrame = imread([tempLocation filesep imList(tFrameNum).name]);
@@ -136,7 +130,7 @@ function process_video(videoName, ffPath,...
       cFileName = imList(i).name;
       if contactList(i) == 2
           %Save frame in processing directory 
-          cFullFileName = [saveLocation filesep cFileName];
+          cFullFileName = [saveDir filesep cFileName];
           imwrite(nFrameMat, cFullFileName, 'png');
       end %Otherwise leave image for deletion
       %

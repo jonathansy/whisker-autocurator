@@ -5,34 +5,38 @@ function [contacts] = preprocess_pole_images(inType, var2)
   % Check process method
   switch inType
   case 'distance'
-    tArray = var2;
-    if exist(tArray) == 0
+    T = var2; %The trial array used to preprocess
+    if exist('T') == 0
       error('Cannot find trial array')
     end
     % load trial array for processing
-    T = load(tArray);
-    numTrials = length(T.trials)
+    numTrials = length(T.trials);
     % Loop through trials and create contacts
     contacts = cell(1);
+    contacts{1}.labels = [];
+    contacts{1}.trialNum = [];
     for i = 1:numTrials
       % Check that it's curatable
       if isempty(T.trials{i}.whiskerTrial) || ~ismember('whiskerTrial', properties(T.trials{i}))
         warning('Trial number %d has no distance to pole information', i)
         tContacts = zeros(1,4000);
+        tContacts(:) = -1;
       else % Trial safe to preprocess
-        numPoints = length(T.trials{3}.whiskerTrial.distanceToPoleCenter{1});
+        numPoints = length(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
         tContacts = zeros(1, numPoints);
-        medPoint = nanmedian(T.trials{i}.whiskerTrial.distanceToPoleCenter{1})
+        medPoint = nanmedian(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
         for j = 1:numPoints %Loop through each point in trial
           currentPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j);
-          if currentPoint > medPoint
+          if currentPoint > (medPoint*0.7)
             tContacts(j) = 0;
           else
-            tContacts(j) = -1;
+            tContacts(j) = 2;
           end
         end
-        contacts{i} = tContacts;
       end
+      contacts{i}.labels = tContacts;
+      contacts{i}.trialNum = T.trials{i}.trialNum;
+    end
 
 
   case 'pixel'

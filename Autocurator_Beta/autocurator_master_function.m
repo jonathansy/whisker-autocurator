@@ -1,4 +1,4 @@
-% AUTOCURATOR_MASTER_FUNCTION(VID_DIR, T, contacts) takes an input of a directory of
+% AUTOCURATOR_MASTER_FUNCTION(VID_DIR, T, CONTACTARRAY, JOBNAME) takes an input of a directory of
 % your videos, a T array, and an empty contact array, and attempts to automatically curate them frame by frame using a
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray, jobName)
@@ -20,23 +20,28 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % max_batch is the maximum number of images to put in a single pickle dataset.
   % Larger amounts will require more RAM to create datasets as well as process
   % them on the cloud. RAM issue is solved by creating multiple datasets and
-  % loading and processing them one at a time so that order is maintained  
+  % loading and processing them one at a time so that order is maintained
   max_batch = 20000;
 
   %% (1) Input checks and base variables
-  if exist(model) ~= 2
-    error(['Input for "MODEL" should be the full path of the h5 file \n'...
-    'containing the training model'])
-  elseif exist(videoDir) ~= 7
+%   if exist(model) ~= 2
+%     error(['Input for "MODEL" should be the full path of the h5 file \n'...
+%     'containing the training model'])
+  if exist(videoDir) ~= 7
     error('Cannot find the image directory specified')
-  elseif exist(contactArray) ~= 2
+  end
+  if exist(contactArray) ~= 2
     error('Cannot find empty contact array, remember to supply full path!')
-  elseif exist(tArray) ~= 2
+  end
+  if exist(tArray) ~= 2
     error('Cannot find trial array, remember to supply full path!')
+  else
+      T = load(tArray);
+      T = T.T;
   end
 
-  if exist(jobNum) == false
-    jobNum = input('What would you like to call this training job? \n');
+  if exist(jobName) == false
+    jobName = input('What would you like to call this training job? \n');
   end
 
   %Derived settings
@@ -46,14 +51,14 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
 
   %% (2) Section for pre-processing images
   % pre_process_images(saveDir, cArray)
-  [contacts] = preprocess_pole_images('distance', tArray);
+  [contacts] = preprocess_pole_images('distance', T);
 
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
-  saveDir = [vidDir filesep 'pole_images'];
+  saveDir = [videoDir filesep 'pole_images'];
   system(['mkdir ' saveDir])
-  create_pole_images_select(videoDir, saveDir, contacts, tArray);
+  create_pole_images_select(videoDir, saveDir, contacts);
 
   %% (4) Convert images to numpy arrays and move to cloud
   % Call Python code to convert the entire dataset of images into numpy arrays
@@ -61,6 +66,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   numpyCmd = sprintf('py images_to_numpy(%s,%s,%s)', saveDir, max_batch, jobName);
   system(numpyCmd)
   % Uploads pickle files to Google cloud
+  npyDataPath = saveDir;
   gsutilUpCmd = sprintf('gsutil cp %s*.pickle %s',...
                          npyDataPath, dataBucket);
   system(gsutilUpCmd)
@@ -76,9 +82,10 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                         '--config=%s ^'...
                         '-- ^'...
                         '--train-file %s'...
+                        '--job_name %s'
                         ], jobName, jobDir, runVer,...
                          modCode, modCodePath, region,...
-                         configFile, dataBucket);
+                         configFile, dataBucket, jobName);
   system(gcloudCmd)
 
   %% (5b) Call Python code to use neural network and train on local computer
@@ -87,8 +94,9 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % a GPU for neural network purposes}
 
   %% (6) Remove touch predictions from Google Cloud
-  gsutilDownCmd = sprintf('gsutil cp %s*.pickle %s',
-                         dataBucket, npyDataPath)
+  downloadName = [jobName '_curated_labels.pickle'];
+  gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
+                         gcloudBucket, downloadName, saveDir);
   system(gsutilDownCmd)
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
