@@ -1,60 +1,48 @@
 import os
+import sys
 import pickle
 import numpy as np
 from scipy import misc
+import argparse
 
 # Default variables
 # max_batch_size = 20000
 
-def images_to_array(save_dir, job_name, max_batch_size, start, batch_num):
+
+def images_to_array(save_dir, job_name):
     # Convert images to numpy array
-    current_ds = []
-    pickle_name = job_name + '_image_dataset_' + str(batch_num) + '.pickle'
-    file_list = os.listdir(save_dir)
-    total_images = len(file_list)
-    check_end = start
+    trial_dir_list = os.listdir(save_dir)
+    # Make directory to put datasets into
+    data_dir = save_dir + '/' + job_name + '_datasets'
+    os.mkdir(data_dir)
 
-    # Write to array
-    for current_image in range(start, max_batch_size):
-        image = file_list[current_image]
-        path_im = save_dir + '/' + image
-        im_array = misc.imread(path_im)
-        current_ds.append(im_array)
-        check_end = check_end + 1
-        if check_end == total_images:
-            break
-
-    # Check if we have reached the end of the dataset
-    if check_end == total_images:
-        # Write dataset here
+    for imdir in trial_dir_list:
+        image_list = os.listdir(save_dir + '/' + imdir)
+        # Write to array
+        current_ds = []
+        pickle_name = data_dir + '/' + imdir + '_image_dataset.pickle'
+        for image in image_list:
+            path_im = save_dir + '/' + imdir + '/' + image
+            im_array = misc.imread(path_im)
+            current_ds.append(im_array)
         with open(pickle_name, 'wb') as handle:
             pickle.dump(current_ds, handle)
-        return
-    else:
-        # Also write dataset here
-        with open(pickle_name, 'wb') as handle:
-            pickle.dump(current_ds, handle)
-        # Advance start spot for recursive bit
-        start = start + max_batch_size
-        batch_num = batch_num + 1
-        images_to_array(save_dir, job_name, max_batch_size, start, batch_num)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Image path
-    parser.add_argument('save_dir',
+    parser.add_argument('--save_dir',
+                        required=True,
                         help='Directory with saved images',
-                        required=True
-                        )
-    # Batch size
-    parser.add_argument('max_batch_size',
-                        help='Number of images to put in a single batch',
-                        required=True
                         )
     # Name of job (for dataset naming purposes)
-    parser.add_argument('job_name',
+    parser.add_argument('--job_name',
+                        required=True,
                         help='Name of this Cloud ML job',
-                        required=True
                         )
+    args = vars(parser.parse_args())
+    save_dir = format(args["save_dir"])
+    job_name = format(args["job_name"])
     # Call main function
-    images_to_array(save_dir, job_name, match_batch_size, 0, 0)
+    images_to_array(save_dir, job_name)
