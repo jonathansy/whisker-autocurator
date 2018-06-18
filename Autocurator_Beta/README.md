@@ -7,9 +7,13 @@ Documentation on Installation and Use of the Whisker Autocurator
 Table of Contents 
 ------
 [Installation](https://github.com/jonathansy/whisker-autocurator/blob/master/Autocurator_Beta/README.md#installation)
+
 [Cloud ML Setup](https://github.com/jonathansy/whisker-autocurator/blob/master/Autocurator_Beta/README.md#cloud-ml-setup)
+
 [Local Drive Setup](https://github.com/jonathansy/whisker-autocurator/blob/master/Autocurator_Beta/README.md#local-drive-setup)
+
 [Operation and Use](https://github.com/jonathansy/whisker-autocurator/blob/master/Autocurator_Beta/README.md#operation-and-use)
+
 [Troubleshooting](https://github.com/jonathansy/whisker-autocurator/blob/master/Autocurator_Beta/README.md#troubleshooting)
 
 Installation 
