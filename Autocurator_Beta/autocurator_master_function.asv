@@ -51,14 +51,14 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
 
   %% (2) Section for pre-processing images
   % pre_process_images(saveDir, cArray)
-%   [contacts] = preprocess_pole_images('distance', T);
+  [contacts] = preprocess_pole_images('distance', T);
 
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
   saveDir = [videoDir filesep 'pole_images'];
-%   system(['mkdir ' saveDir])
-%   create_pole_images_select(videoDir, saveDir, contacts);
+  system(['mkdir ' saveDir])
+  create_pole_images_select(videoDir, saveDir, contacts);
 
   %% (4) Convert images to numpy arrays and move to cloud
   % Call Python code to convert the entire dataset of images into numpy arrays
@@ -67,12 +67,12 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                       '--save_dir %s --job_name %s'],...
                       autocuratorPath, filesep, filesep,... 
                       saveDir, jobName);
-  %system(numpyCmd)
+  system(numpyCmd)
   % Uploads pickle files to Google cloud
   npyDataPath = [saveDir filesep jobName '_datasets' filesep];
   gsutilUpCmd = sprintf('gsutil cp %s*.pickle %s',...
                          npyDataPath, dataBucket);
-  %system(gsutilUpCmd)
+  system(gsutilUpCmd)
 
 
   %% (5a) Call Python code to use neural network and train on Google Cloud
@@ -102,13 +102,15 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % a GPU for neural network purposes}
 
   %% (6) Remove touch predictions from Google Cloud
-  downloadName = [jobName '_curated_labels.pickle'];
+  gcloudBucket = 'gs://whisker_training_data';
+  newSaveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\Curated_datasets';
+  downloadName = ['/Curated_Data/*.pickle'];
   gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
-                         gcloudBucket, downloadName, saveDir);
+                         gcloudBucket, downloadName, newSaveDir);
   system(gsutilDownCmd)
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
-  system(['py retrieve_npy_labels'])
+  system(['py retrieve_npy_labels --data_dir ' ])
   contactArray = write_to_contact_array(labels, contactArray);
 
   %% (8) Finish

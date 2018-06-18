@@ -102,14 +102,16 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % a GPU for neural network purposes}
 
   %% (6) Remove touch predictions from Google Cloud
-  downloadName = [jobName '_curated_labels.pickle'];
+  gcloudBucket = 'gs://whisker_training_data';
+  newSaveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\Curated_datasets';
+  downloadName = ['/Curated_Data/*.pickle'];
   gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
-                         gcloudBucket, downloadName, saveDir);
+                         gcloudBucket, downloadName, newSaveDir);
   system(gsutilDownCmd)
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
-  system(['py retrieve_npy_labels'])
-  contactArray = write_to_contact_array(labels, contactArray);
+  system(['py retrieve_npy_labels --data_dir ' newSaveDir]);
+  write_to_contact_array(newSaveDir, contacts, contactArray);
 
   %% (8) Finish
   fprintf(['Finished autocuration. \n'...
