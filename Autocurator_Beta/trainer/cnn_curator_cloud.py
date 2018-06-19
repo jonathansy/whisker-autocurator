@@ -71,12 +71,11 @@ def curate_data_with_model(data, curation_model):
     return curated_labels
 
 
-def write_array_to_file(curated_labels, file_name, iter):
+def write_array_to_file(curated_labels, file_name):
     iter = str(iter)
     file_name = file_name + '_curated_' + iter + '.pickle'
     # Re-pickle our numpy array and write to path
-    with file_io.FileIO(os.path.join('gs://whisker_training_data/Curated_Data', file_name),
-                        mode='wb') as handle:
+    with file_io.FileIO(file_name, mode='wb') as handle:
         pickle.dump(curated_labels, handle)
 
 
@@ -120,13 +119,13 @@ if __name__ == '__main__':
 
     # Loop
     logging.info('Starting the loop')
-    num = 0
     for d_set in datasets:
         logging.info(d_set)
         data_path = d_set
         im_data = load_image_data(data_path)
         c_labels = curate_data_with_model(im_data, cur_model)
-        write_array_to_file(c_labels, job_name, num)
-        num = num + 1
-    # Write total label set to file
+        # Get trial number from name
+        save_name = d_set[:-21]
+        write_array_to_file(c_labels, save_name)
 
+    # Write total label set to file

@@ -13,15 +13,19 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
   % Now figure out our labels
   numTrials = length(contactLabels)
   for i = 1:numTrials % We want to iterate by trial
-    contactPoints = contactLabels{i}.labels
+    contactPoints = contactLabels{i}.labels;
     if contactPoints(1) == -1
       continue
       % A negative one indicates that the trial array had no data
       % and we should skip this trial
     end
-    searchNum = contactPoints{i}.trialNum;
-    npyName = [jobName '_curated_' searchNum '_labels.npy'];
-    predictions = readNPY(npyName) % Reads a Python npy file into MATLAB
+    searchNum = contactLabels{i}.trialNum;
+%     searchNum = searchNum - 217;
+%     if searchNum > 211
+%         continue 
+%     end
+    npyName = [ npLocation filesep jobName '_curated_' num2str(searchNum) '_labels.npy'];
+    predictions = readNPY(npyName); % Reads a Python npy file into MATLAB
     % Code courtesy of npy-matlab
     iterator = 1; % Need iterator so we don't skip a prediction point when we
     % skip a pre-processed point. There should be less predictions than points
@@ -52,4 +56,6 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
     cArray.contacts{i}.contactInds = conIdx;
   end
   % Save the contact array
-  save(contactArray, cArray.contacts, cArray.params)
+  contacts = cArray.contacts;
+  params = cArray.params;
+  save(contactArray, 'contacts', 'params')

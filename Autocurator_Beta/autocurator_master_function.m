@@ -58,7 +58,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % batches of .png images that can be analyzed by the model
   saveDir = [videoDir filesep 'pole_images'];
   system(['mkdir ' saveDir])
-  create_pole_images_select(videoDir, saveDir, contacts);
+  %create_pole_images_select(videoDir, saveDir, contacts);
 
   %% (4) Convert images to numpy arrays and move to cloud
   % Call Python code to convert the entire dataset of images into numpy arrays
@@ -67,12 +67,12 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                       '--save_dir %s --job_name %s'],...
                       autocuratorPath, filesep, filesep,... 
                       saveDir, jobName);
-  system(numpyCmd)
+  %system(numpyCmd)
   % Uploads pickle files to Google cloud
   npyDataPath = [saveDir filesep jobName '_datasets' filesep];
   gsutilUpCmd = sprintf('gsutil cp %s*.pickle %s',...
                          npyDataPath, dataBucket);
-  system(gsutilUpCmd)
+  %system(gsutilUpCmd)
 
 
   %% (5a) Call Python code to use neural network and train on Google Cloud
@@ -94,7 +94,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                          modCode, modCodePath, region,...
                          configFile, dataBucket, modelPath,...
                          jobName);
-  system(gcloudCmd)
+  %system(gcloudCmd)
 
   %% (5b) Call Python code to use neural network and train on local computer
   % with a GPU (Lol, like we'll get a GPU)
@@ -107,12 +107,12 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   downloadName = ['/Curated_Data/*.pickle'];
   gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
                          gcloudBucket, downloadName, newSaveDir);
-  system(gsutilDownCmd)
+  %system(gsutilDownCmd)
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
-  system(['py retrieve_npy_labels --data_dir ' newSaveDir]);
-  write_to_contact_array(newSaveDir, contacts, contactArray);
+  %system(['py retrieve_npy_labels --data_dir ' newSaveDir]);
+  write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
 
   %% (8) Finish
-  fprintf(['Finished autocuration. \n'...
-           'Total time elapsed: %d hours, %d minutes %d seconds'], tHour, tMin, tSec)
+%   fprintf(['Finished autocuration. \n'...
+%            'Total time elapsed: %d hours, %d minutes %d seconds'], tHour, tMin, tSec)
