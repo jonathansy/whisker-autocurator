@@ -6,7 +6,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Defaults
   % Bucket is Google Cloud storage location of data, url will begin with 'gs://'
   gcloudBucket = 'gs://whisker_training_data';
-  % Version number is for CloudML, 1.0 seems to work fine
+  % Version number is for CloudML, 1.8 seems to work fine
   runVer = 1.8;
   % Model code gives location of python code that is actually uploaded to the cloud
   modCode = 'trainer.cnn_curator_cloud';
@@ -22,6 +22,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Model Path lists the location on the cloud where the training model is
   % stored including the model name
   modelPath = 'gs://whisker_training_data/Model_saves/Logs/autocurator_modelm.h5';
+  newSaveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\Curated_datasets';
 
   %% (1) Input checks and base variables
 %   if exist(model) ~= 2
@@ -67,7 +68,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                       '--save_dir %s --job_name %s'],...
                       autocuratorPath, filesep, filesep,...
                       saveDir, jobName);
-  %system(numpyCmd)
+  system(numpyCmd)
   % Uploads pickle files to Google cloud
   npyDataPath = [saveDir filesep jobName '_datasets' filesep];
   gsutilUpCmd = sprintf('gsutil cp %s*.pickle %s',...
@@ -111,6 +112,8 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
   system(['py retrieve_npy_labels --data_dir ' newSaveDir]);
+  % If error: uncomment the below:
+  %[contacts] = preprocess_pole_images('distance', T);
   write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
 
   %% (8) Finish
