@@ -26,11 +26,13 @@ Clone or download the scripts in this directory as well as the HLab dependencies
 
 ### Full Dependency List
 * Python 3.5 (compatibility not tested with 2.7)  
--Numpy package  
--Pickle package  
--Scipy package  
+  - Numpy package  
+  - Pickle package  
+  - Scipy package  
 * Google Cloud SDK package 
-* MATLAB r2013b or later (recommend Parallel Processing and Machine Learning toolbox)
+* MATLAB r2013b or later (recommend Parallel Processing and Machine Learning toolbox)  
+  - [HLab_MatlabTools](https://github.com/hireslab/HLab_MatlabTools)  
+  - [HLab_Whiskers](https://github.com/hireslab/HLab_Whiskers)
 * Google Cloud Account 
 
 Cloud ML Setup
