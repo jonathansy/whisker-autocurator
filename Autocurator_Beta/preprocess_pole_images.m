@@ -24,10 +24,9 @@ function [contacts] = preprocess_pole_images(inType, var2)
       else % Trial safe to preprocess
         numPoints = length(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
         tContacts = zeros(1, numPoints);
-        medPoint = nanmedian(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
         for j = 1:numPoints %Loop through each point in trial
           currentPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j);
-          if currentPoint > (medPoint*0.7)
+          if currentPoint > 2
             tContacts(j) = 0;
           else
             tContacts(j) = 2;
