@@ -51,7 +51,6 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   cArray = load(contactArray);
 
   %% (2) Section for pre-processing images
-  pre_process_images(saveDir, cArray)
   [contacts] = preprocess_pole_images('distance', T);
 
   %% (3) Turn directory into images
