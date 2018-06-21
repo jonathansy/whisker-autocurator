@@ -33,6 +33,7 @@ Clone or download the scripts in this directory as well as the HLab dependencies
 * MATLAB r2013b or later (recommend Parallel Processing and Machine Learning toolbox)  
   - [HLab_MatlabTools](https://github.com/hireslab/HLab_MatlabTools)  
   - [HLab_Whiskers](https://github.com/hireslab/HLab_Whiskers)
+  - [npy-matlab](https://github.com/kwikteam/npy-matlab)
 * Google Cloud Account
 * [FFmpeg](https://www.ffmpeg.org/)
 
