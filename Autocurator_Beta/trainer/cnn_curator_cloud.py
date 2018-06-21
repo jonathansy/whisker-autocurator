@@ -42,7 +42,7 @@ def load_image_data(data_path):
     # Parses through data on cloud and unpickles it
     # Import Data
     with file_io.FileIO(data_path, mode='rb') as np_file:
-        i_data = np.load(pickle_file)
+        i_data = np.load(np_file)
     # i_data = np.array(i_data, dtype=np.uint8)
     i_data = i_data.reshape(i_data.shape[0], img_rows, img_cols, 1)
     i_data = i_data.astype('float32')

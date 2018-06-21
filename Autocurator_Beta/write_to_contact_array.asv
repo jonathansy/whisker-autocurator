@@ -26,28 +26,24 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
     searchNum = contactLabels{i}.trialNum;
     
     %Find relevant .npy file
-    fullNumpyName = [];
     for j = 1:numNPYs
       numpyName = npyList{j};
       exprNum = '[0123456789]+_curated_labels.npy';
       resultStr = regexp(numpyName, exprNum, 'match'); %Should return #.npy
-      numStr = resultStr{1}(1:(end-19)); %Strip '_curated_labels.npy' to leave just video number
-      numpyNumber = str2num(numStr);
-      if numpyNumber == searchNum
-        fullNumpyName = [npLocation filesep numpyName];
+      numStr = resultStr{1}(1:(end-4)); %Strip '.npy' to leave just video number
+      vidNumber = str2num(numStr);
+      if vidNumber == trialNum
+        fullVidName = [videoDir filesep videoName];
         break
       else
         continue
       end
     end
     
-    if isempty(fullNumpyName)
-      continue
-    end
-    
-    predictions = readNPY(fullNumpyName); % Reads a Python npy file into MATLAB
+    npyName = [ npLocation filesep jobName '_curated_' num2str(searchNum) '_labels.npy'];
+    predictions = readNPY(npyName); % Reads a Python npy file into MATLAB
     % Code courtesy of npy-matlab
-    iterator = 0; % Need iterator so we don't skip a prediction point when we
+    iterator = 1; % Need iterator so we don't skip a prediction point when we
     % skip a pre-processed point. There should be less predictions than points
     % in the contact array as a result of our preprocessing. They should go in
     % order. Points needing predictions are marked with a 2.
@@ -71,7 +67,7 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
       end
       % If it doesn't equal 2, we skip the point
     end
-    conIdx = find(contactPoints == 1); % Extract out indices of touches because
+    conIdx = find(contactPoints == 1) % Extract out indices of touches because
     %that's what the contact array uses
     cArray.contacts{i}.contactInds = conIdx;
   end
