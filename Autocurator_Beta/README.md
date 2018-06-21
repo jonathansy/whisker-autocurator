@@ -84,3 +84,16 @@ STEP 7: Take the predictions, convert from .pickle files to .npy files using a P
 
 Troubleshooting
 ------
+### Solutions to specific known errors:
+
+1. "Resources are insufficient in region" >>> This logged error is caused when too many people are using the region you submit your job to. You can fix this by either attempting to find another suitable region or simply trying again at a later time. 
+
+2. "Cannot find trial array / contact array" >>> Make sure you supply the path to your trial/contact array (as a string) for the program to work, rather than the object variable itself. 
+
+3. "No module named numpy"/"No module named Scipy" >>> Caused by not installing the packages on Python. The autocurator is written with the assumption that you install packages to the base Python code using the pip installer. It does not support Anaconda or other environment software and installing packages only to an environment may cause this error to occur. 
+
+4. "Expected one output from a curly brace or dot indexing expression, but there were 2 results." >>> Thus far this error appears to occur randomly within the videos_to_npy.m script. It cannot be replicated 100% of the time and the known solution is to simply run your code again (it will likely work). The error only occurs on the first iteration of the top level loop in videos_to_npy.m and thus will not interrupt your program in the middle of creating .npy files.  
+
+### General troubleshooting instructions 
+
+Due to the large amount of exact paths that need to be inputed into the code, typos or incorrect paths will likely cause a large amount of early errors when the autocurator is first transfered onto a new device. The autocurator_master_function is divided into sections, each of which is designed to save progress at each interval. For example, if the program errors in section 4 you will not have to re-run section 3 as the needed files have already been created and stored. The only exception is section 2, which outputs the pre-processed varaible 'contacts'. The 'contacts' variable is required for sections 3 and 7 and will thus have to be re-run.   
