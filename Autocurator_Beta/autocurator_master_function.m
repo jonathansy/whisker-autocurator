@@ -71,7 +71,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
 %   system(numpyCmd)
 %   % Uploads pickle files to Google cloud
   npyDataPath = [saveDir filesep jobName '_datasets' filesep];
-  gsutilUpCmd = sprintf('gsutil cp %s*.pickle %s',...
+  gsutilUpCmd = sprintf('gsutil cp %s*.npy %s',...
                          npyDataPath, dataBucket);
   system(gsutilUpCmd)
 
