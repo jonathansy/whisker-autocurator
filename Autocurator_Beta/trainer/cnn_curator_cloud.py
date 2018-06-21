@@ -107,7 +107,7 @@ if __name__ == '__main__':
     cloud_data_path = format(args["cloud_data_path"])
 
     # Run main functions
-    search_Loc = cloud_data_path + '/*.pickle'
+    search_Loc = cloud_data_path + '/*.npy'
     datasets = file_io.get_matching_files(search_Loc)
     numData = len(datasets)
     logging.info(numData)

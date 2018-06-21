@@ -6,6 +6,8 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Defaults
   % Bucket is Google Cloud storage location of data, url will begin with 'gs://'
   gcloudBucket = 'gs://whisker_training_data';
+  %
+  gcloudProjectID = 'whisker-personal-autocurator';
   % Version number is for CloudML, 1.8 seems to work fine
   runVer = 1.8;
   % Model code gives location of python code that is actually uploaded to the cloud
@@ -74,7 +76,8 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   gsutilUpCmd = sprintf('gsutil cp %s*.npy %s',...
                          npyDataPath, dataBucket);
   system(gsutilUpCmd)
-
+  % Change project ID to avoid permission issues
+  changeProjCmd = ['gcloud set project
 
   %% (5a) Call Python code to use neural network and train on Google Cloud
   cd(autocuratorPath);
