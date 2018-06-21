@@ -35,7 +35,6 @@ Clone or download the scripts in this directory as well as the HLab dependencies
   - [HLab_Whiskers](https://github.com/hireslab/HLab_Whiskers)
   - [npy-matlab](https://github.com/kwikteam/npy-matlab)
 * Google Cloud Account
-* [FFmpeg](https://www.ffmpeg.org/)
 
 Cloud ML Setup
 ------
@@ -51,6 +50,11 @@ Submitting training jobs to CloudML do not require manually setting up virtual m
 
 Local Drive Setup 
 ------
+Autocurator_Beta, HLab_MatlabTools, HLab_Whiskers, and npy-matlab should all be cloned to the local Github location and added to the MATLAB path. Python should be installed. Once Python is installed, use pip to install the other packages on the command line (exact syntax for using pip may vary with your version of Python). Install Google Cloud SDK and make sure its commands can be run from the command line prompt. 
+
+Within Autocurator_Beta, make sure you have a subdirectory called 'trainer' (you can rename it but you will need to change the pathing in 'autocurator_master_function.m'. Within this subdirectory you should have cnn_curator_cloud.py, the .yaml file you are using as a configuration file (default/example included in this package), and \_\_init\_\_.py (which is an empty Python file but required for operation). 
+
+You should designate a directory on your local drive to save .npy files as well as a location to save the final curated datasets. 
 
 Operation and Use
 ------
