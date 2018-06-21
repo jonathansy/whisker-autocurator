@@ -56,9 +56,10 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
-  saveDir = [videoDir filesep 'pole_images'];
-  system(['mkdir ' saveDir])
-  create_pole_images_select(videoDir, saveDir, contacts);
+  saveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\706_171106\NPYs';
+%   system(['mkdir ' saveDir])
+%   create_pole_images_select(videoDir, saveDir, contacts);
+  videos_to_npy(contacts, videoDir, saveDir) 
 
   %% (4) Convert images to numpy arrays and move to cloud
   % Call Python code to convert the entire dataset of images into numpy arrays
