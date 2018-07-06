@@ -3,42 +3,34 @@ import os
 import numpy as np
 import pickle
 import scipy.misc
+import tensorflow
+from keras.utils import np_utils
 
-target = 'AH0706x171106-217_dataset.npy'
-path = 'C:/SuperUser/CNN_Projects/Test_Run_1/706_171106/NPYs/'
+target = 'AH0698x170601-3_labels.npy'
+path = 'C:/SuperUser/CNN_Projects/Phil_Dataset/SavingDir/'
 fullpath = path + target
 X = np.load(fullpath)
 print(X.shape)
-a = X[1300,:,:]
-scipy.misc.imsave('C:/SuperUser/CNN_Projects/Test_Run_1/706_171106/outfile1.jpg', a)
-print(X[:,:,0])
-X = np.reshape(X, [2870, 61, 61, 1],
-               order='A')
-print(X.shape)
-b = X[1300,:,:,0]
-scipy.misc.imsave('C:/SuperUser/CNN_Projects/Test_Run_1/706_171106/outfile2.jpg', b)
-print(X[0,:,:,0])
-# def load_image_data(data_path):
-#     # Shape of images (temporarily hard-coded)
-#     img_rows = 61
-#     img_cols = 61
-#     # Parses through data on cloud and unpickles it
-#     # Import Data
-#     with open(data_path, mode='rb') as pickle_file:
-#         i_data = pickle.load(pickle_file)
-#     i_data = np.array(i_data, dtype=np.uint8)
-#     i_data = i_data.reshape(i_data.shape[0], img_rows, img_cols)
-#     input_shape = (img_rows, img_cols, 1)
-#     i_data = i_data.astype('float32')
-#     i_data /= 255
-#     return i_data
-#
-# X = load_image_data(fullpath)
-# print(X.shape)
+A = X
+print(A.shape)
+B = np.concatenate((X, A), axis=1)
+print(B.shape)
 
-# a = np.array([[1,2,3],[4,5,6],[7,8,9]])
-# b = np.array([[1,2,3],[4,5,6],[7,8,9]])
-# c = np.array([a,b])
-# c = c.reshape(3,3,2)
-# print(c)
-# print(c.shape)
+# a = X[0,1]
+# # scipy.misc.imsave('C:/SuperUser/CNN_Projects/outfile1.jpg', a)
+# a = np_utils.to_categorical(X, 2)
+# print(a.shape)
+# b = a.shape
+# a = np.reshape(a, [b[1], b[2]])
+# X = np.reshape(X, [230, 61, 61, 1])
+
+#print(target[-10:])
+
+# A = np.random.rand(2,3,3)
+# B = np.random.rand(1,3,3)
+# print(A.shape)
+# print(B.shape)
+#
+# A = np.concatenate((A,B), axis=0)
+# print(A)
+# print(A.shape)

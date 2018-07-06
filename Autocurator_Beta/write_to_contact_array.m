@@ -29,9 +29,9 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
     fullNumpyName = [];
     for j = 1:numNPYs
       numpyName = npyList{j};
-      exprNum = '[0123456789]+_curated_labels.npy';
+      exprNum = '[0123456789]+__curated_labels.npy';
       resultStr = regexp(numpyName, exprNum, 'match'); %Should return #.npy
-      numStr = resultStr{1}(1:(end-19)); %Strip '_curated_labels.npy' to leave just video number
+      numStr = resultStr{1}(1:(end-20)); %Strip '_curated_labels.npy' to leave just video number
       numpyNumber = str2num(numStr);
       if numpyNumber == searchNum
         fullNumpyName = [npLocation filesep numpyName];
@@ -57,23 +57,24 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, jobName
         % Use predictions to change
         if predictions(iterator, 1) > predictions(iterator, 2)
           % Touch point
-          contactPoints(j) = 1;
+          contactPoints(j) = 0;
         elseif predictions(iterator, 1) < predictions(iterator, 2)
           % Non-touch point
-          contactPoints(j) = 0;
+          contactPoints(j) = 1;
         else
           % This means the CNN determined the probability of touch vs non-touch
           % was exactly equal. Empirically we know the CNN is biased towards
           % touches so we will mark as a non-touch. Note that getting this
           % conditional should be HIGHLY unlikely
-          contactPoints(j) = 0;
+          contactPoints(j) = 1;
         end
       end
       % If it doesn't equal 2, we skip the point
     end
     conIdx = find(contactPoints == 1); % Extract out indices of touches because
     %that's what the contact array uses
-    cArray.contacts{i}.contactInds = conIdx;
+    cArray.contacts{i}.contactInds = [];
+    cArray.contacts{i}.contactInds{1} = conIdx;
   end
   % Save the contact array
   contacts = cArray.contacts;

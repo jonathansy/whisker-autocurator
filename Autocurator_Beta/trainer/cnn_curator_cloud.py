@@ -51,8 +51,8 @@ def load_image_data(data_path):
 
 
 def load_model_from_gcs(model_path):
-    model_file = file_io.FileIO(model_path, mode = 'rb')
-    temp_model_location = './temp_model.h5'
+    model_file = file_io.FileIO(model_path, mode='rb')
+    temp_model_location = './rotated_29.h5'
     temp_model_file = open(temp_model_location, 'wb')
     temp_model_file.write(model_file.read())
     temp_model_file.close()
@@ -64,14 +64,16 @@ def load_model_from_gcs(model_path):
 def curate_data_with_model(data, curation_model):
     # Actual prediction step occurs here
     curated_labels = curation_model.predict(data,
-                                         batch_size=1024,
-                                         verbose=0,
-                                         steps=None)
+                                            batch_size=1024,
+                                            verbose=0,
+                                            steps=None)
     return curated_labels
 
 
 def write_array_to_file(curated_labels, file_name):
     file_name = file_name + '_curated.pickle'
+    out_m = 'Writing file: ' + file_name
+    logging.info(out_m)
     # Re-pickle our numpy array and write to path
     with file_io.FileIO(file_name, mode='wb') as handle:
         pickle.dump(curated_labels, handle)
@@ -123,7 +125,7 @@ if __name__ == '__main__':
         im_data = load_image_data(data_path)
         c_labels = curate_data_with_model(im_data, cur_model)
         # Get trial number from name
-        save_name = d_set[:-21]
+        save_name = d_set[:-11]
         write_array_to_file(c_labels, save_name)
 
     # Write total label set to file
