@@ -25,9 +25,25 @@ switch inType
             else % Trial safe to preprocess
                 numPoints = length(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
                 tContacts = zeros(1, numPoints);
+                poleDownTime = (T.trials{i}.pinDescentOnsetTime -.08)*1000; 
+                poleUpTime = T.trials{i}.pinAscentOnsetTime*1000;
+                % Sanity check 
+                if poleUpTime > 4000
+                    poleUpTime = 3500;
+                end 
+                if poleDownTime >4000
+                    poleDownTime = 500;
+                end
                 for j = 1:numPoints %Loop through each point in trial
                     currentPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j);
-                    if currentPoint > 2
+                    % Check if in pole up range
+                    if j > poleDownTime && j < poleUpTime
+                        inRange = 1;
+                    else 
+                        inRange = 0;
+                    end 
+                    % Select based on pole up range and distance to pole
+                    if currentPoint > 0.5 || inRange == 0
                         tContacts(j) = 0;
                     else
                         tContacts(j) = 2;

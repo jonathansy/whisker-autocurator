@@ -6,7 +6,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Defaults
   % Bucket is Google Cloud storage location of data, url will begin with 'gs://'
   gcloudBucket = 'gs://whisker_training_data';
-  %
+  % Project ID name
   gcloudProjectID = 'whisker-personal-autocurator';
   % Version number is for CloudML, 1.8 seems to work fine
   runVer = 1.8;
@@ -24,7 +24,10 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Model Path lists the location on the cloud where the training model is
   % stored including the model name
   modelPath = 'gs://whisker_training_data/Model_saves/rotated_21.h5';
-  newSaveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\Curated_datasets';
+  % Place to save uncurated datasets
+  saveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Datasets';
+  % Place to save curated datasets
+  newSaveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Curated_Datasets';
 
   %% (1) Input checks and base variables
 %   if exist(model) ~= 2
@@ -58,24 +61,15 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
-  saveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\706_171106\NPYs';
-%   system(['mkdir ' saveDir])
-%   create_pole_images_select(videoDir, saveDir, contacts);
-  %videos_to_npy(contacts, videoDir, saveDir) 
+  system(['mkdir ' saveDir])
+  %contacts = videos_to_npy(contacts, videoDir, saveDir);
 
-  %% (4) Convert images to numpy arrays and move to cloud
-  % Call Python code to convert the entire dataset of images into numpy arrays
-  % that can be read by the Keras API (and Tensorflow)
-%   numpyCmd = sprintf(['py %s%sAutocurator_Beta%simages_to_numpy.py '...
-%                       '--save_dir %s --job_name %s'],...
-%                       autocuratorPath, filesep, filesep,...
-%                       saveDir, jobName);
-%   system(numpyCmd)
-%   % Uploads pickle files to Google cloud
-  npyDataPath = [saveDir filesep jobName '_datasets' filesep];
-  gsutilUpCmd = sprintf('gsutil cp %s*.npy %s',...
+  %% (4) Move to cloud
+  % Uploads pickle files to Google cloud
+  npyDataPath = [saveDir '/*.npy'];
+  gsutilUpCmd = sprintf('gsutil cp %s %s',...
                          npyDataPath, dataBucket);
-  %system(gsutilUpCmd)
+  system(gsutilUpCmd)
   % Change project ID to avoid permission issues
   %changeProjCmd = ['gcloud set project
 
@@ -98,7 +92,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                          modCode, modCodePath, region,...
                          configFile, dataBucket, modelPath,...
                          jobName);
-  %system(gcloudCmd)
+  system(gcloudCmd)
 
   %% (5b) Call Python code to use neural network and train on local computer
   % with a GPU (Lol, like we'll get a GPU)
@@ -106,19 +100,25 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % a GPU for neural network purposes}
 
   %% (6) Remove touch predictions from Google Cloud
-  gcloudBucket = 'gs://whisker_training_data';
-  newSaveDir = 'C:\SuperUser\CNN_Projects\Test_Run_1\Curated_datasets';
+  %gcloudBucket = 'gs://whisker_training_data';
   downloadName = ['/Data/*.pickle'];
   gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
                          gcloudBucket, downloadName, newSaveDir);
-  %system(gsutilDownCmd)
+  system(gsutilDownCmd)
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
-  %system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
+  system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
   % If error: uncomment the below:
   %[contacts] = preprocess_pole_images('distance', T);
   write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
 
-  %% (8) Finish
-%   fprintf(['Finished autocuration. \n'...
-%            'Total time elapsed: %d hours, %d minutes %d seconds'], tHour, tMin, tSec)
+  %% (8) Finish 
+  % Use to clear needed directories 
+  clearDir = inputdlg('Do you want to clear data directories?');
+  % Clearing section below
+  if clearDir == true
+      system(['del /q ' saveDir])
+      system(['del /q ' newSaveDir])
+      system()
+  end
+

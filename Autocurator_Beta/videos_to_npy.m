@@ -13,7 +13,9 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
   videoList = {vList(:).name};
   numVideos = length(videoList);
 
-  % Begin loop
+%   % Begin loop
+%   averages = [];
+%   avgIter = 1;
   for i = 1:numTrials
     % Find indices of frames we need to curate
     labels = contacts{i}.labels;
@@ -50,7 +52,14 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
     % Find pole location in video
     sPM = load(samplePoleImage); % Saved picture of pole
     samplePoleMat = sPM.samplePoleMat;
-    testFrame = videoArray.frames(1500).cdata(:,:,1);
+    % The below is an absurdly stupid solution to a randomly occuring 
+    % MATLAB error regarding improper indexing
+    try
+        testFrame = videoArray.frames(1500).cdata(:,:,1);
+    catch
+        % Yes you can do the same thing and the error does not reappear
+        testFrame = videoArray.frames(1500).cdata(:,:,1);
+    end
     corrPoints = normxcorr2(samplePoleMat, testFrame(:,:,1));
     [yCorr, xCorr] = find(corrPoints==max(corrPoints(:)));
     xPole = xCorr - (size(samplePoleMat, 2) /2);
@@ -59,20 +68,22 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
     
     
     % Edge detection to determine if whisker in frame
-    relId = 1;
-    for k = 1:numel(relevantIdx)
-        findFrame = videoArray.frames(k).cdata(:,:,1);
-        eFrame = edge(findFrame);
-        eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-        topSide = mean(mean(eFrameClose(1:15,1:46)));
-        rightSide = mean(mean(eFrameClose(1:46,47:61)));
-        if mean(topSide + rightSide) > 0.02
-            contacts{i}.labels(relevantIdx(relId)) = 0;
-            relevantIdx(relId) = [];
-        else 
-            relId = relId + 1;
-        end
-    end
+%     newRel = zeros(1, numel(relevantIdx));
+%     for k = 1:numel(relevantIdx)
+%         findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
+%         eFrame = edge(findFrame);
+%         eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+%         topSide = mean(mean(eFrameClose(1:15,1:46)));
+%         rightSide = mean(mean(eFrameClose(1:46,47:61)));
+%         %         avg = mean(topSide + rightSide);
+%         %         averages(avgIter) = avg;
+%         %         avgIter = avgIter + 1;
+%         if mean(topSide + rightSide) < 0.02
+%             contacts{i}.labels(relevantIdx(k)) = 3;
+%             newRel(k) = 1;
+%         end
+%     end
+%     relevantIdx(newRel == 1) = [];
     
     % Prep loop
     numRelFrames = numel(relevantIdx);
@@ -80,17 +91,17 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
     finalMat = repmat(finalMat, 1,1,61);
 
     % Frame loop
-%     for k = 1:numRelFrames
-%       curIdx = relevantIdx(k);
-%       curFrame = videoArray.frames(curIdx).cdata(:,:,1);
-%       nFrameMat = curFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-%       finalMat(k,:,:) = nFrameMat;
-%     end
+    for k = 1:numRelFrames
+      curIdx = relevantIdx(k);
+      curFrame = videoArray.frames(curIdx).cdata(:,:,1);
+      nFrameMat = curFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+      finalMat(k,:,:) = nFrameMat;
+    end
 
     % Save as npy file
     saveName = videoName(1:end-4);
     saveName = [saveDir filesep saveName '_dataset.npy'];
-    %writeNPY(finalMat, saveName)
+    writeNPY(finalMat, saveName)
     
     % Clear variables
     videoArray = [];

@@ -1,4 +1,4 @@
-function videos_to_npy(contacts, videoDir, saveDir)
+function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
   % Check existance
   if exist(videoDir) ~= 7
     error('Cannot find video directory')
@@ -13,7 +13,9 @@ function videos_to_npy(contacts, videoDir, saveDir)
   videoList = {vList(:).name};
   numVideos = length(videoList);
 
-  % Begin loop
+%   % Begin loop
+%   averages = [];
+%   avgIter = 1;
   for i = 1:numTrials
     % Find indices of frames we need to curate
     labels = contacts{i}.labels;
@@ -59,15 +61,22 @@ function videos_to_npy(contacts, videoDir, saveDir)
     
     
     % Edge detection to determine if whisker in frame
+    newRel = zeros(1, numel(relevantIdx));
     for k = 1:numel(relevantIdx)
-        findFrame = videoArray.frames(k).cdata(:,:,1);
-        eFrame = edge(curFrame);
+        findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
+        eFrame = edge(findFrame);
         eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
         topSide = mean(mean(eFrameClose(1:15,1:46)));
         rightSide = mean(mean(eFrameClose(1:46,47:61)));
-        if mean(topSide + rightSide) > 0.02
-            relevantIdx(k)
-        end
+%         avg = mean(topSide + rightSide);
+%         averages(avgIter) = avg;
+%         avgIter = avgIter + 1;
+        if mean(topSide + rightSide) < 0.03
+            contacts{i}.labels(relevantIdx(k)) = 3;
+            relevantIdx(relId) = [];
+        else 
+            relId = relId + 1;
+       end
     end
     
     % Prep loop
@@ -76,17 +85,17 @@ function videos_to_npy(contacts, videoDir, saveDir)
     finalMat = repmat(finalMat, 1,1,61);
 
     % Frame loop
-    for k = 1:numRelFrames
-      curIdx = relevantIdx(k);
-      curFrame = videoArray.frames(curIdx).cdata(:,:,1);
-      nFrameMat = curFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-      finalMat(k,:,:) = nFrameMat;
-    end
+%     for k = 1:numRelFrames
+%       curIdx = relevantIdx(k);
+%       curFrame = videoArray.frames(curIdx).cdata(:,:,1);
+%       nFrameMat = curFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+%       finalMat(k,:,:) = nFrameMat;
+%     end
 
     % Save as npy file
     saveName = videoName(1:end-4);
     saveName = [saveDir filesep saveName '_dataset.npy'];
-    writeNPY(finalMat, saveName)
+    %writeNPY(finalMat, saveName)
     
     % Clear variables
     videoArray = [];
@@ -94,3 +103,5 @@ function videos_to_npy(contacts, videoDir, saveDir)
     fullVidName = [];
     videoName = [];
   end
+  
+  newContacts = contacts;
