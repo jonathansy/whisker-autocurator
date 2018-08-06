@@ -1,4 +1,4 @@
-function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
+function [newContacts] =videos_to_npy(contacts, videoDir, saveDir, writeYes)
   % Check existance
   if exist(videoDir) ~= 7
     error('Cannot find video directory')
@@ -19,7 +19,10 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
   for i = 1:numTrials
     % Find indices of frames we need to curate
     labels = contacts{i}.labels;
-    relevantIdx = find(labels == 2);
+    twoIdx = find(labels == 2);
+    threeIdx = find(labels == 3);
+    relevantIdx = [twoIdx threeIdx];
+    relevantIdx = sort(relevantIdx);
     % Skip trial if nothing to curate
     if isempty(relevantIdx)
       continue
@@ -27,22 +30,29 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
 
     % Find corresponding video
     trialNum = contacts{i}.trialNum;
-    for j = 1:numVideos
-      videoName = videoList{j};
-      exprNum = '[0123456789]+.mp4';
-      resultStr = regexp(videoName, exprNum, 'match'); %Should return #.mp4
-      numStr = resultStr{1}(1:(end-4)); %Strip '.mp4' to leave just video number
-      vidNumber = str2num(numStr);
-      if vidNumber == trialNum
-        fullVidName = [videoDir filesep videoName];
-        break
-      else
-        continue
-      end
+    if strcmp(contacts{i}.video, 'null')
+        continue 
+    else
+        fullVidName = [videoDir filesep contacts{i}.video '.mp4'];
     end
     
+% OUTDATED SECTION FOR FINDING VIDEOS, USE IF NO trackerfileNames
+%     for j = 1:numVideos
+%       videoName = videoList{j};
+%       exprNum = '[0123456789]+.mp4';
+%       resultStr = regexp(videoName, exprNum, 'match'); %Should return #.mp4
+%       numStr = resultStr{1}(1:(end-4)); %Strip '.mp4' to leave just video number
+%       vidNumber = str2num(numStr);
+%       if vidNumber == trialNum
+%         fullVidName = [videoDir filesep videoName];
+%         break
+%       else
+%         continue
+%       end
+%     end
+    
     % If for some reason no video, skip
-    if isempty(fullVidName)
+    if ~exist(fullVidName)
       continue
     end
 
@@ -66,24 +76,31 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
     yPole = yCorr - (size(samplePoleMat, 1) /2);
     poleBox = [yPole-30, yPole+30, xPole-30, xPole+30];
     
+    [~,maxSize] = size(videoArray.frames);
+    relevantIdx(relevantIdx > maxSize) = [];
     
-    % Edge detection to determine if whisker in frame
-%     newRel = zeros(1, numel(relevantIdx));
-%     for k = 1:numel(relevantIdx)
-%         findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
-%         eFrame = edge(findFrame);
-%         eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-%         topSide = mean(mean(eFrameClose(1:15,1:46)));
-%         rightSide = mean(mean(eFrameClose(1:46,47:61)));
-%         %         avg = mean(topSide + rightSide);
-%         %         averages(avgIter) = avg;
-%         %         avgIter = avgIter + 1;
-%         if mean(topSide + rightSide) < 0.02
-%             contacts{i}.labels(relevantIdx(k)) = 3;
-%             newRel(k) = 1;
-%         end
-%     end
-%     relevantIdx(newRel == 1) = [];
+    %Edge detection to determine if whisker in frame ----------------------
+    newRel = zeros(1, numel(relevantIdx));
+    for k = 1:numel(relevantIdx)
+        findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
+        eFrame = edge(findFrame);
+        eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+        topSide = mean(mean(eFrameClose(1:15,1:46)));
+        rightSide = mean(mean(eFrameClose(1:46,47:61)));
+        %         avg = mean(topSide + rightSide);
+        %         averages(avgIter) = avg;
+        %         avgIter = avgIter + 1;
+        if mean(topSide + rightSide) > 0.02 && contacts{i}.labels(relevantIdx(k)) == 3
+            contacts{i}.labels(relevantIdx(k)) = 2;
+        elseif contacts{i}.labels(relevantIdx(k)) == 2
+            %Nothing 
+        else 
+            contacts{i}.labels(relevantIdx(k)) = 0;
+            newRel(k) = 1;
+        end
+    end
+    relevantIdx(newRel == 1) = [];
+    % ---------------------------------------------------------------------
     
     % Prep loop
     numRelFrames = numel(relevantIdx);
@@ -99,9 +116,11 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir)
     end
 
     % Save as npy file
-    saveName = videoName(1:end-4);
+    saveName = contacts{i}.video;
     saveName = [saveDir filesep saveName '_dataset.npy'];
-    writeNPY(finalMat, saveName)
+    if writeYes == true
+        writeNPY(finalMat, saveName)
+    end
     
     % Clear variables
     videoArray = [];

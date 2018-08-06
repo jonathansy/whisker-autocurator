@@ -2,7 +2,16 @@
 % your videos, a T array, and an empty contact array, and attempts to automatically curate them frame by frame using a
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray, jobName)
-  %% SETTINGS
+%% SECTION CONTROL
+JOB_NAME = 'Pipeline_46';
+PIXEL_DETECTION =       1;
+MAKE_NPY =              1;
+UPLOAD =                1;
+PROCESS_AND_DOWNLOAD =  1;
+PICKLE_TO_NPY =         1;
+WRITE_CONTACTS =        1;
+
+%% SETTINGS
   % Defaults
   % Bucket is Google Cloud storage location of data, url will begin with 'gs://'
   gcloudBucket = 'gs://whisker_training_data';
@@ -17,7 +26,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   % Path where the code you are currently running is
   autocuratorPath = 'C:\SuperUser\Documents\GitHub\whisker-autocurator';
   % Data center in which to process data. us-west1 (Oregon) is closest but
-  % us-central1 (Iowa) is required to use TPUs and best GPUs
+  % us-central1 (Iowa) or us-east1 (South Carolina) is required to use TPUs and best GPUs
   region = 'us-east1';
   % Location of .yaml file used by Google Cloud for configuration settigns
   configFile = 'C:\Users\shires\AppData\Local\Google\Cloud_SDK\trainer\cloudml-gpu.yaml';
@@ -28,6 +37,7 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   saveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Datasets';
   % Place to save curated datasets
   newSaveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Curated_Datasets';
+  jobName = JOB_NAME;
 
   %% (1) Input checks and base variables
 %   if exist(model) ~= 2
@@ -61,16 +71,19 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
-  
-  system(['mkdir ' saveDir])
-  contacts = videos_to_npy(contacts, videoDir, saveDir);
+  if PIXEL_DETECTION == true
+      system(['mkdir ' saveDir])
+      contacts = videos_to_npy(contacts, videoDir, saveDir, MAKE_NPY);
+  end
 
   %% (4) Move to cloud
   % Uploads pickle files to Google cloud
   npyDataPath = [saveDir '/*.npy'];
-  gsutilUpCmd = sprintf('gsutil cp %s %s',...
-                         npyDataPath, dataBucket);
-  system(gsutilUpCmd)
+  if UPLOAD == true
+      gsutilUpCmd = sprintf('gsutil -m cp %s %s',...
+          npyDataPath, dataBucket);
+      system(gsutilUpCmd)
+  end
   % Change project ID to avoid permission issues
   %changeProjCmd = ['gcloud set project
 
@@ -93,8 +106,11 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
                          modCode, modCodePath, region,...
                          configFile, dataBucket, modelPath,...
                          jobName);
-  system(gcloudCmd)
-  %pause(1800)
+                     
+ if PROCESS_AND_DOWNLOAD == true
+     system(gcloudCmd)
+     pause(1200)
+ end
 
   %% (5b) Call Python code to use neural network and train on local computer
   % with a GPU (Lol, like we'll get a GPU)
@@ -104,15 +120,20 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   %% (6) Remove touch predictions from Google Cloud
   %gcloudBucket = 'gs://whisker_training_data';
   downloadName = ['/Data/*.pickle'];
-  gsutilDownCmd = sprintf('gsutil cp %s%s %s',...
+  gsutilDownCmd = sprintf('gsutil -m cp %s%s %s',...
                          gcloudBucket, downloadName, newSaveDir);
-  system(gsutilDownCmd)
+                     
+  if PROCESS_AND_DOWNLOAD == true
+      system(gsutilDownCmd)
+  end
 
   %% (7) Convert to contact array (or fill in contact array in reverse)
-  %system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
-  % If error: uncomment the below:
-  %[contacts] = preprocess_pole_images('distance', T);
-  write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
+  if PICKLE_TO_NPY == true
+    system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
+  end
+  if WRITE_CONTACTS == true
+    write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
+  end
 
   %% (8) Finish 
   % Use to clear needed directories 
@@ -121,6 +142,6 @@ function [contacts] = autocurator_master_function(videoDir, tArray, contactArray
   if strcmpi(clearDir, 'Y')
       system(['del /q ' saveDir])
       system(['del /q ' newSaveDir])
-      system(['gsutil rm -rf ' dataBucket])
+      system(['gsutil -m rm -rf ' dataBucket])
   end
 

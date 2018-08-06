@@ -16,12 +16,14 @@ switch inType
         contacts = cell(1);
         contacts{1}.labels = [];
         contacts{1}.trialNum = [];
+        contacts{1}.video = [];
         for i = 1:numTrials
             % Check that it's curatable
             if isempty(T.trials{i}.whiskerTrial) || ~ismember('whiskerTrial', properties(T.trials{i}))
                 warning('Trial number %d has no distance to pole information', i)
                 tContacts = zeros(1,4000);
                 tContacts(:) = -1;
+                contacts{i}.video = 'null';
             else % Trial safe to preprocess
                 numPoints = length(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
                 tContacts = zeros(1, numPoints);
@@ -29,7 +31,7 @@ switch inType
                 poleUpTime = T.trials{i}.pinAscentOnsetTime*1000;
                 % Sanity check 
                 if poleUpTime > 4000
-                    poleUpTime = 3500;
+                    poleUpTime = 4000;
                 end 
                 if poleDownTime >4000
                     poleDownTime = 500;
@@ -42,13 +44,38 @@ switch inType
                     else 
                         inRange = 0;
                     end 
+                    % Check velocity
+                    if j == 1
+                        vPrevious = 0;
+                    else
+                        previousPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j-1);
+                        vPrevious = abs(currentPoint - previousPoint);
+                    end
+                    if j == numPoints
+                        vNext = 0;
+                    else
+                        nextPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j+1);
+                        vNext = abs(currentPoint - nextPoint);
+                    end
+                    if vPrevious > 0.11 && vNext > 0.11
+                        vOut = true;
+                    elseif vPrevious > 0.11 && vNext > 0.05
+                        vOut = true;
+                    elseif vPrevious > 0.05 && vNext > 0.11
+                        vOut = true;
+                    else
+                        vOut = false;
+                    end
                     % Select based on pole up range and distance to pole
                     if currentPoint > 0.5 || inRange == 0
                         tContacts(j) = 0;
-                    else
+                    elseif currentPoint <= 0.5 && vOut == false
                         tContacts(j) = 2;
+                    else
+                        tContacts(j) = 0;
                     end
                 end
+                contacts{i}.video = T.trials{i}.whiskerTrial.trackerFileName;
             end
             contacts{i}.labels = tContacts;
             contacts{i}.trialNum = T.trials{i}.trialNum;
