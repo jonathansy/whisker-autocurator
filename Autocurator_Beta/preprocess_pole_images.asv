@@ -36,9 +36,6 @@ switch inType
                 if poleDownTime >4000
                     poleDownTime = 500;
                 end
-                % Determine minimum point to see if local tracking goes
-                % below zero.  
-                locMin = min(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
                 for j = 1:numPoints %Loop through each point in trial
                     currentPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j);
                     % Check if in pole up range
@@ -70,9 +67,9 @@ switch inType
                         vOut = false;
                     end
                     % Select based on pole up range and distance to pole
-                    if currentPoint > (0.5 + locMin) || inRange == 0
+                    if currentPoint > 0.5 || inRange == 0
                         tContacts(j) = 0;
-                    elseif currentPoint <= (0.5 + locMin) && vOut == false
+                    elseif currentPoint <= 0.5 && vOut == false
                         tContacts(j) = 2;
 %                     elseif currentPoint <= 1 && vOut == false
 %                         tContacts(j) = 3;
@@ -123,12 +120,10 @@ switch inType
         % TO-DO: Add ability to loop through WT files
         dirList = dir([var2 '/*.mat']);
         dirList = dirList.name;
-        % Parse out only WT files 
-        
+        trialDir = var2;
         for i = 1:numTrials 
             WT = load(trialList{j});
             WT = WT.w;
-            % Need to find only angles of 90 degrees 
             for j = 1:numPoints
                 currentPoint = WT.dist2pole(j);
                 % Check velocity

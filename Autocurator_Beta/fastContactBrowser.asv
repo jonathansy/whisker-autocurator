@@ -73,6 +73,80 @@ set(handles.axes7,'XTick',[]);
 set(handles.axes8,'YTick',[]);
 set(handles.axes8,'XTick',[]);
 
+%
+handles.loop = 0;
+handles.trialLoop = 0;
+
+
+% Update handles structure
+guidata(hObject, handles);
+startFun(hObject, handles, varargin)
+
+
+% UIWAIT makes fastContactBrowser wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+function startFun(hObject, handles, varargin)
+% Check trial array
+if isempty(varargin)
+    error('Need to supply valid trial array')
+elseif strcmp(class(varargin{1}{1}), 'LCA.TrialArray') == 0  
+    error('Need to supply valid trial array')
+end 
+% Check if only trial array, autogen contacts and params if so 
+if length(varargin) ~= 4
+    % Autogen taken from trialContactBrowser 
+    warning(['FastContactBrowser is designed to be used in conjunction '...
+              'with the autocurator curation. Using it on uncurated data '...
+              'will likely be more time intensive than using the old '...
+              'trialContactBrowser.m script'])
+          
+    % Run autogen script
+    
+end
+handles.T = varargin{1}{1};
+%handles.contacts = contacts; 
+%handles.params = params;
+% Need to find way to sort trials and points 
+handles.conf = [];
+handles.trials = [];
+handles.doneWithTrial = false; 
+handles.currentTrial = handles.trials{1};
+% Find relevant contacts and confidence 
+if ~isempty(handles.conf) && length(varargin) == 4
+    % Confidence is taken from the class predictions outputed from the 
+    % softmax layer of the autocurator
+    contacts = varargin{2}{1};
+    params = varargin{3}{1};
+    % Note: raw confidence numbers were adjusted by 0.1 to reflect bias towards
+    % touch. This bias is accounted for by the autocurator. 
+    relevantConf = find(contacts{handles.currentTrial}.confidence < .6);
+    
+end
+
+guidata(hObject, handles);
+mainLoop(hObject, handles);
+
+
+
+function mainLoop(hObject, handles)
+% Main loop to handle contact browsing
+handles.loop = handles.loop + 1;
+
+% Find next trial
+if handles.doneWithTrial == true
+    cTrial = handles.currentTrial;
+    handles.trialLoop = handles.trialLoop + 1;
+end
+
+if isempty(handles.conf)
+    % No confidence measurement mode  
+else 
+    % Use autocurator confidence
+    currentConf = handles.conf(handles.loop);
+    
+end
+
 % Show images (EXAMPLE)
 % -3
 example = mmread('Z:\Data\Video\PHILLIP\AH0706\171031\AH0706x171031-4.mp4',(1411-3));
@@ -102,14 +176,8 @@ imshow(example, 'Parent', handles.axes7);
 example = mmread('Z:\Data\Video\PHILLIP\AH0706\171031\AH0706x171031-4.mp4',(1411+3));
 example = example.frames.cdata(258:318,239:299,1);
 imshow(example, 'Parent', handles.axes8);
-
-%
-
-% Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes fastContactBrowser wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -121,6 +189,7 @@ function varargout = fastContactBrowser_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
 
 
 % --- Executes on button press in pushbutton4.
@@ -166,8 +235,6 @@ function checkbox1_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-autoSkip = true;
-
 % Hint: get(hObject,'Value') returns toggle state of checkbox1
 
 
@@ -176,7 +243,9 @@ function pushbutton10_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton10 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if autoSkip == true;
+if handles.checkbox1.Value == true
+    mainLoop(hObject, handles);
+end
 
 
 % --- Executes on button press in pushbutton11.
@@ -184,3 +253,6 @@ function pushbutton11_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton11 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.checkbox1.Value == true
+    mainLoop(hObject, handles);
+end

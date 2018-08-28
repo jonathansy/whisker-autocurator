@@ -1,4 +1,7 @@
-function [newContacts] =videos_to_npy(contacts, videoDir, saveDir, writeYes)
+% VIDEOS_TO_NPY_ALT is a version of VIDEOS_TO_NPY designed to work with data left in a 
+% WT array, rather than a trial array. It also introduces deriving pole
+% position from bar position, rather than using normxcorr2
+function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
   % Check existance
   if exist(videoDir) ~= 7
     error('Cannot find video directory')
@@ -14,8 +17,6 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir, writeYes)
   numVideos = length(videoList);
 
 %   % Begin loop
-%   averages = [];
-%   avgIter = 1;
   for i = 1:numTrials
     % Find indices of frames we need to curate
     labels = contacts{i}.labels;

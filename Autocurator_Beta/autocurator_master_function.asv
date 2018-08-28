@@ -3,7 +3,7 @@
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray)
 %% SECTION CONTROL
-JOB_NAME = 'Pipeline_86';
+JOB_NAME = 'Pipeline_78';
 PIXEL_DETECTION =       1;
 MAKE_NPY =              1;
 UPLOAD =                1;
@@ -132,7 +132,7 @@ WRITE_CONTACTS =        1;
     system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
   end
   if WRITE_CONTACTS == true
-    write_to_contact_array(newSaveDir, contacts, contactArray, tArray);
+    write_to_contact_array(newSaveDir, contacts, contactArray, jobName);
   end
 
   %% (8) Finish 

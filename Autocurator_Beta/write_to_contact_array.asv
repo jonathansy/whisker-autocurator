@@ -8,15 +8,11 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
     error('Cannot find contact array')
   else
     cArray = load(contactArray);
-    T = load(tArray);
-    T = T.T;
   end
   
   % Error check if sizes don't match
   if length(contactLabels) ~= length(contactArray)
       error('Contact array size does not match')
-  elseif length(T.trials) ~= length(contactArray)
-      error('Trial array size does not match contact array')
   end
 
   % Get list of .npy files
@@ -143,14 +139,6 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
     cArray.contacts{i}.confidence = confidence;
     cArray.contacts{i}.trialNum = contactLabels{i}.trialNum;
   end
-  % Re-error check 
-   % Error check if sizes don't match
-  if length(contactLabels) ~= length(contactArray)
-      error('Contact array size does not match')
-  elseif length(T.trials) ~= length(contactArray)
-      error('Trial array size does not match contact array')
-  end
-  
   % Save the contact array
   contacts = cArray.contacts;
   params = cArray.params;

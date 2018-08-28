@@ -37,7 +37,7 @@ def train_model(data_dir, export_dir, m_name):
     model = Sequential()
 
     model.add(ConvLSTM2D(filters=40,
-                         kernel_size=(3, 3),
+                         kernel_size=(2, 2),
                          input_shape=input_shape,
                          padding='same',
                          return_sequences=True
@@ -47,9 +47,23 @@ def train_model(data_dir, export_dir, m_name):
 
     model.add(ConvLSTM2D(filters=40,
                          kernel_size=(3, 3),
-                         input_shape=input_shape,
                          padding='same',
                          return_sequences=True
                          dropout=0.5,
-                         recurrent_dropout=0.5))
+                         recurrent_dropout=0.2))
     seq.add(BatchNormalization())
+
+    model.add(ConvLSTM2D(filters=40,
+                         kernel_size=(3, 3),
+                         padding='same',
+                         return_sequences=True
+                         dropout=0.5,
+                         recurrent_dropout=0.2))
+    seq.add(BatchNormalization())
+
+    model.add(AveragePooling3d((1,61,61)))
+    model.add(Reshape((-1,40)))
+    model.add(Dense(num_classes, activation='softmax'))
+
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.Adam())
