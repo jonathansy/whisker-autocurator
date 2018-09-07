@@ -1,28 +1,20 @@
-% WRITE_TO_CONTACT_ARRAY(NUMPY_LOCATION, CONTACTS, CONTACTARRAY, JOBNAME) takes
+% WRITE_TO_CONTACT_ARRAY_MAT(NUMPY_LOCATION, CONTACTS) takes
 % .npy files in NUMPY_LOCATION with curation labels and uses those labels as well
-% as preprocessed labels in CONTACTS to write to CONTACTARRAY. JOBNAME is used to
-% find the names of the needed files
-function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
-  % Handle the contact array
-  if exist(contactArray) ~= 2
-    error('Cannot find contact array')
-  else
-    cArray = load(contactArray);
-    T = load(tArray);
-    T = T.T;
-  end
-  
-  % Error check if sizes don't match
-  if length(contactLabels) ~= length(cArray.contacts)
-      error('Contact array size does not match')
-  elseif length(T.trials) ~= length(cArray.contacts)
-      error('Trial array size does not match contact array')
-  end
-
+% as preprocessed labels in CONTACTS to write to a newly generated contact
+% array. 
+function write_to_contact_mat(npLocation, contactLabels)
   % Get list of .npy files
   npyList = dir([npLocation '/*.npy']);
   npyList = {npyList(:).name};
   numNPYs = length(npyList);
+  
+  %Create contact array
+  cArray = [];
+  cArray.contacts{1}.contactInds = [];
+  cArray.contacts{1}.contactInds{1} = [];
+  cArray.contacts{1}.confidence = [];
+  cArray.contacts{1}.trialNum = [];
+  
   % Now figure out our labels
   numTrials = length(contactLabels);
   for i = 1:numTrials % We want to iterate by trial
@@ -42,26 +34,6 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
     
     %Find relevant .npy file
     fullNumpyName = [npLocation filesep contactLabels{i}.video '__curated_labels.npy'];
-    
-% OLD SECTION FOR FINDING NUMPY ARRAYS
-%     for j = 1:numNPYs
-%       numpyName = npyList{j};
-%       exprNum = '[0123456789]+__curated_labels.npy';
-%       resultStr = regexp(numpyName, exprNum, 'match'); %Should return #.npy
-%       numStr = resultStr{1}(1:(end-20)); %Strip '_curated_labels.npy' to leave just video number
-%       numpyNumber = str2num(numStr);
-%       if numpyNumber == searchNum
-%         fullNumpyName = [npLocation filesep numpyName];
-%         break
-%       else
-%         continue
-%       end
-%     end
-%     
-%     if isempty(fullNumpyName)
-%       continue
-%     end
-    
     predictions = readNPY(fullNumpyName); % Reads a Python npy file into MATLAB
     % Code courtesy of npy-matlab
     iterator = 1; % Need iterator so we don't skip a prediction point when we
@@ -136,6 +108,7 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
         end
             
     end
+
     conIdx = find(contactPoints == 1); % Extract out indices of touches because
     %that's what the contact array uses
     cArray.contacts{i}.contactInds = [];
@@ -143,15 +116,8 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
     cArray.contacts{i}.confidence = confidence;
     cArray.contacts{i}.trialNum = contactLabels{i}.trialNum;
   end
-  % Re-error check 
-   % Error check if sizes don't match
-  if length(contactLabels) ~= length(cArray.contacts)
-      error('Contact array size does not match')
-  elseif length(T.trials) ~= length(cArray.contacts)
-      error('Trial array size does not match contact array')
-  end
   
   % Save the contact array
   contacts = cArray.contacts;
-  params = cArray.params;
-  save(contactArray, 'contacts', 'params')
+  %params = cArray.params;
+  save('JK_Contacts.mat', 'contacts')

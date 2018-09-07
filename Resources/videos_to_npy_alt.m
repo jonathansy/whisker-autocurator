@@ -8,7 +8,7 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
   elseif exist(saveDir) ~= 7
     error('Cannot find saving directory')
   end
-  samplePoleImage = 'C:\SuperUser\Code\ML_whisker_image_dev\samplePoleMat';
+  samplePoleImage = 'C:\SuperUser\Code\ML_whisker_image_dev\samplePoleMat.mat';
 
   % Establish number of trials in contacts and number of videos
   numTrials = length(contacts);
@@ -61,22 +61,34 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
     videoArray = mmread(fullVidName);
     
     % Find pole location in video
-    sPM = load(samplePoleImage); % Saved picture of pole
-    samplePoleMat = sPM.samplePoleMat;
+    %%%%%%%%%%%%%%%%%%%% Temporarily preset
+    if exist(samplePoleImage) == 0
+        sPM = load(samplePoleImage); % Saved picture of pole
+        samplePoleMat = sPM.samplePoleMat;
+        barSwitch = 0;
+    else %Try to find bar files
+        barPos = contacts{i}.barPos;
+        barSwitch = 1;
+    end
+        
     
     % Results in error sometimes >
-    try
-        testFrame = videoArray.frames(1500).cdata(:,:,1);
-    catch
-%         save('tmp_save');
-        keyboard
+    if barSwitch == 0
+        try
+            testFrame = videoArray.frames(1500).cdata(:,:,1);
+        catch
+            %         save('tmp_save');
+            keyboard
+        end
     end
     
-    corrPoints = normxcorr2(samplePoleMat, testFrame(:,:,1));
-    [yCorr, xCorr] = find(corrPoints==max(corrPoints(:)));
-    xPole = xCorr - (size(samplePoleMat, 2) /2);
-    yPole = yCorr - (size(samplePoleMat, 1) /2);
-    poleBox = [yPole-30, yPole+30, xPole-30, xPole+30];
+    if barSwitch == 0
+        corrPoints = normxcorr2(samplePoleMat, testFrame(:,:,1));
+        [yCorr, xCorr] = find(corrPoints==max(corrPoints(:)));
+        xPole = xCorr - (size(samplePoleMat, 2) /2);
+        yPole = yCorr - (size(samplePoleMat, 1) /2);
+        poleBox = [yPole-30, yPole+30, xPole-30, xPole+30];
+    end
     
     [~,maxSize] = size(videoArray.frames);
     relevantIdx(relevantIdx > maxSize) = [];
@@ -104,29 +116,32 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
 %     relevantIdx(newRel == 1) = [];
     % ---------------------------------------------------------------------
         %Edge detection to determine if whisker in frame ----------------------
-    newRel = zeros(1, numel(relevantIdx));
-    for k = 1:numel(relevantIdx)
-        findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
-        eFrame = imbinarize(findFrame, 'adaptive', 'Sensitivity', 0.6); % See docs on imbinarize, but basically we want
-        % to get an image that's all intensity values of 1s or 0s. This
-        % will make the whisker detection more robust across different
-        % contrast
-        eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-        topSide = mean(mean(eFrameClose(1:15,1:46)));
-        rightSide = mean(mean(eFrameClose(1:46,47:61)));
-        %         avg = mean(topSide + rightSide);
-        %         averages(avgIter) = avg;
-        %         avgIter = avgIter + 1;
-        if mean(topSide + rightSide) < 2.99 && contacts{i}.labels(relevantIdx(k)) == 3
-            contacts{i}.labels(relevantIdx(k)) = 2;
-        elseif contacts{i}.labels(relevantIdx(k)) == 2
-            %Nothing 
-        else 
-            contacts{i}.labels(relevantIdx(k)) = 0;
-            newRel(k) = 1;
-        end
-    end
-    relevantIdx(newRel == 1) = [];
+%     newRel = zeros(1, numel(relevantIdx));
+%     for k = 1:numel(relevantIdx)
+%         findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
+%         eFrame = imbinarize(findFrame, 'adaptive', 'Sensitivity', 0.6); % See docs on imbinarize, but basically we want
+%         % to get an image that's all intensity values of 1s or 0s. This
+%         % will make the whisker detection more robust across different
+%         % contrast
+%         if barSwitch == 1
+%             [xPole, yPole] = barPos(relevantIdx(k));
+%         end
+%         eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+%         topSide = mean(mean(eFrameClose(1:15,1:46)));
+%         rightSide = mean(mean(eFrameClose(1:46,47:61)));
+%         %         avg = mean(topSide + rightSide);
+%         %         averages(avgIter) = avg;
+%         %         avgIter = avgIter + 1;
+%         if mean(topSide + rightSide) < 2.99 && contacts{i}.labels(relevantIdx(k)) == 3
+%             contacts{i}.labels(relevantIdx(k)) = 2;
+%         elseif contacts{i}.labels(relevantIdx(k)) == 2
+%             %Nothing 
+%         else 
+%             contacts{i}.labels(relevantIdx(k)) = 0;
+%             newRel(k) = 1;
+%         end
+%     end
+%     relevantIdx(newRel == 1) = [];
     % ---------------------------------------------------------------------
     
     % Prep loop
@@ -138,6 +153,31 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
     for k = 1:numRelFrames
       curIdx = relevantIdx(k);
       curFrame = videoArray.frames(curIdx).cdata(:,:,1);
+      if barSwitch == 1
+            xPole = barPos(1, curIdx);
+            xPole = round(xPole, 0);
+            yPole = barPos(2, curIdx);
+            yPole = round(yPole, 0);
+            poleBox = [yPole-30, yPole+30, xPole-30, xPole+30];
+            % Out of bounds check 
+            [yDim, xDim] = size(curFrame);
+            if poleBox(1) < 1
+                poleBox(2) = poleBox(2) + (1 - poleBox(1));
+                poleBox(1) = 1;
+            end
+            if poleBox(2) > yDim
+                poleBox(1) = poleBox(1) - (poleBox(2)-yDim);
+                poleBox(2) = yDim;
+            end
+            if poleBox(3) < 1
+                poleBox(4) = poleBox(4) + (1 - poleBox(3));
+                poleBox(3) = 1;
+            end
+            if poleBox(4) > xDim
+                poleBox(3) = poleBox(3) - (poleBox(4)-yDim);
+                poleBox(4) = yDim;
+            end
+      end
       nFrameMat = curFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
       finalMat(k,:,:) = nFrameMat;
     end

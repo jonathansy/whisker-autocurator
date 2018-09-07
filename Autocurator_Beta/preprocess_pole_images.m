@@ -6,7 +6,8 @@ function [contacts] = preprocess_pole_images(inType, var2)
 switch inType
     % DISTANCE ONLY ---------------------------------------------------------
     case 'distance'
-        T = var2; %The trial array used to preprocess
+        T = load(var2); %The trial array used to preprocess
+        T = T.T;
         if exist('T') == 0
             error('Cannot find trial array')
         end
@@ -39,6 +40,9 @@ switch inType
                 % Determine minimum point to see if local tracking goes
                 % below zero.  
                 locMin = min(T.trials{i}.whiskerTrial.distanceToPoleCenter{1});
+                if locMin > 0.5
+                    locMin = 0;
+                end
                 for j = 1:numPoints %Loop through each point in trial
                     currentPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j);
                     % Check if in pole up range
@@ -122,48 +126,96 @@ switch inType
         end
         % TO-DO: Add ability to loop through WT files
         dirList = dir([var2 '/*.mat']);
-        dirList = dirList.name;
-        % Parse out only WT files 
-        
-        for i = 1:numTrials 
-            WT = load(trialList{j});
+        wtIdx = zeros(length(dirList), 1);
+        for i = 1:length(dirList)
+            % Retrieve only WT files since that's where data is stored
+            dirName = dirList(i).name;
+            fileEnd = dirName(end-5:end);
+            if strcmp(fileEnd, 'WT.mat')
+                wtIdx(i) = 1;
+            else
+                wtIdx(i) = 0;
+            end
+        end
+        % Create mini contact array
+        contacts = cell(1);
+        contacts{1}.labels = [];
+        contacts{1}.trialNum = [];
+        contacts{1}.video = [];
+        iterator = 1;
+        for i = 1:length(dirList)
+            if wtIdx(i) == 0
+                continue
+            end
+            WT = load([var2 filesep dirList(i).name]);
             WT = WT.w;
-            % Need to find only angles of 90 degrees 
+            % Need to find only angles of 90 degrees
+            if WT.angle ~= 90
+                contacts{iterator}.labels = -1;
+                contacts{iterator}.trialNum = WT.trialNum;
+                contacts{iterator}.video = 'null';
+                contacts{iterator}.barPos = barPos;
+                iterator = iterator + 1;
+                continue
+            end
+            
+            numPoints = length(WT.dist2pole);
+            tContacts = zeros(1, numPoints);
+            barPos = zeros(2, numPoints);
             for j = 1:numPoints
                 currentPoint = WT.dist2pole(j);
-                % Check velocity
-                    if j == 1
-                        vPrevious = 0;
-                    else
-                        previousPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j-1);
-                        vPrevious = abs(currentPoint - previousPoint);
+                % Check if pole is up
+                if ismember(j, WT.poleUpFrames)
+                    inRange = 1;
+                    % Find bar position (Only available for pole up)
+                    barPos(:,j) = WT.barPos(WT.barPos(:,1) == j,2:3);
+                    if isnan(barPos(1,j)) || isnan(barPos(1,j))
+                       barPos(:,j) = [0,0];
+                       inRange = 0;
                     end
-                    if j == numPoints
-                        vNext = 0;
-                    else
-                        nextPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j+1);
-                        vNext = abs(currentPoint - nextPoint);
-                    end
-                    if vPrevious > 0.11 && vNext > 0.11
-                        vOut = true;
-                    elseif vPrevious > 0.11 && vNext > 0.05
-                        vOut = true;
-                    elseif vPrevious > 0.05 && vNext > 0.11
-                        vOut = true;
-                    else
-                        vOut = false;
-                    end
-                    % Select based on pole up range and distance to pole
-                    if currentPoint > 0.5 || inRange == 0
-                        tContacts(j) = 0;
-                    elseif currentPoint <= 0.5 && vOut == false
-                        tContacts(j) = 2;
-%                     elseif currentPoint <= 1 && vOut == false
-%                         tContacts(j) = 3;
-                    else
-                        tContacts(j) = 0;
-                    end   
+                else
+                    inRange = 0;
+                    barPos(:,j) = [0,0];
+                end
+                %                 % Check velocity {Temporarily suspended}
+                %                     if j == 1
+                %                         vPrevious = 0;
+                %                     else
+                %                         previousPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j-1);
+                %                         vPrevious = abs(currentPoint - previousPoint);
+                %                     end
+                %                     if j == numPoints
+                %                         vNext = 0;
+                %                     else
+                %                         nextPoint = T.trials{i}.whiskerTrial.distanceToPoleCenter{1}(j+1);
+                %                         vNext = abs(currentPoint - nextPoint);
+                %                     end
+                %                     if vPrevious > 0.11 && vNext > 0.11
+                %                         vOut = true;
+                %                     elseif vPrevious > 0.11 && vNext > 0.05
+                %                         vOut = true;
+                %                     elseif vPrevious > 0.05 && vNext > 0.11
+                %                         vOut = true;
+                %                     else
+                %                         vOut = false;
+                %                     end
+                % Select based on pole up range and distance to pole
+                vOut = false;
+                if currentPoint > 10 || inRange == 0
+                    tContacts(j) = 0;
+                elseif currentPoint <= 10 && vOut == false
+                    tContacts(j) = 2;
+                    %                     elseif currentPoint <= 1 && vOut == false
+                    %                         tContacts(j) = 3;
+                else
+                    tContacts(j) = 0;
+                end
             end
+            contacts{iterator}.labels = tContacts;
+            contacts{iterator}.trialNum = WT.trialNum;
+            contacts{iterator}.video = num2str(WT.trialNum);
+            contacts{iterator}.barPos = barPos;
+            iterator = iterator + 1;
         end
         
         

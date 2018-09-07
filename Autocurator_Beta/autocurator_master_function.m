@@ -3,7 +3,8 @@
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray)
 %% SECTION CONTROL
-JOB_NAME = 'Pipeline_86';
+JOB_NAME = 'Pipeline_104';
+INPUT_DATA_FORMAT = 'distance';
 PIXEL_DETECTION =       1;
 MAKE_NPY =              1;
 UPLOAD =                1;
@@ -46,14 +47,8 @@ WRITE_CONTACTS =        1;
   if exist(videoDir) ~= 7
     error('Cannot find the image directory specified')
   end
-  if exist(contactArray) ~= 2
-    error('Cannot find empty contact array, remember to supply full path!')
-  end
-  if exist(tArray) ~= 2
+  if exist(tArray) ~= 2 && exist(tArray) ~= 7
     error('Cannot find trial array, remember to supply full path!')
-  else
-      T = load(tArray);
-      T = T.T;
   end
 
   if exist('jobName') == false
@@ -63,17 +58,23 @@ WRITE_CONTACTS =        1;
   %Derived settings
   jobDir = [gcloudBucket '/Jobs'];
   dataBucket = [gcloudBucket '/Data'];
-  cArray = load(contactArray);
+  if exist(contactArray) == 2
+    cArray = load(contactArray);
+  end
 
   %% (2) Section for pre-processing images
-  [contacts] = preprocess_pole_images('distance', T);
+  [contacts] = preprocess_pole_images(INPUT_DATA_FORMAT, tArray);
 
   %% (3) Turn directory into images
   % Take the videos supplied in the video directory and use them to create
   % batches of .png images that can be analyzed by the model
   if PIXEL_DETECTION == true
       system(['mkdir ' saveDir])
-      contacts = videos_to_npy(contacts, videoDir, saveDir, MAKE_NPY);
+      if strcmp(INPUT_DATA_FORMAT, 'distance_WT');
+          contacts = videos_to_npy_alt(contacts, videoDir, saveDir, MAKE_NPY);
+      else
+        contacts = videos_to_npy(contacts, videoDir, saveDir, MAKE_NPY);
+      end
   end
 
   %% (4) Move to cloud
@@ -132,7 +133,13 @@ WRITE_CONTACTS =        1;
     system(['py retrieve_npy_labels.py --data_dir ' newSaveDir]);
   end
   if WRITE_CONTACTS == true
-    write_to_contact_array(newSaveDir, contacts, contactArray, tArray);
+    if strcmp(INPUT_DATA_FORMAT,'distance_WT')
+        % Alternate version which writes to a contact array with only
+        % contact info
+        write_to_contact_mat(newSaveDir, contacts);
+    else
+        write_to_contact_array(newSaveDir, contacts, contactArray, tArray);
+    end
   end
 
   %% (8) Finish 
