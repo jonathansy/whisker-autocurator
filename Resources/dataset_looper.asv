@@ -1,15 +1,33 @@
 
-tArrayDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\tArrays';
+tArrayDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\loopTArrays';
 cArrayDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\cArrays';
 tArrayList = dir([tArrayDir '/*.mat']);
 vids = 'Z:/Data\Video\PHILLIP\';
+jobIdx = 107;
 
 for i = 1:length(tArrayList)
     tName = tArrayList(i).name;
     tPath = [tArrayDir filesep tName];
+    sessName = regexp(tName, '_[1234567890]+', 'match');
+    if numel(sessName) ~= 1
+        error('Name search failed')
+    else
+        sessName = sessName{1};
+        cArrayName = ['ConTA' sessName '.mat'];
+    end
     T = load(tPath);
     T = T.T;
     mouse = T.mouseName;
     session = T.sessionName;
     vDir = [vids filesep mouse filesep session];
+    tDir = [tArrayDir filesep tName]; 
+    cDir = [cArrayDir filesep nContacts]; 
+    % Auto-create contact array 
+    [nContacts, nParams] = buildNewContactArray(T);
+    save([cArrayDir filesep cArrayName], nContacts); 
+    
+   %Make job name
+   jobName = ['Pipeline_' num2str(jobIdx)];
+   autocurator_master_function(vDir, tDir, cDir, jobName);
+   jobIdx = jobIdx + 1;
 end

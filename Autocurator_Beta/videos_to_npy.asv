@@ -53,6 +53,7 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir, writeYes)
     
     % If for some reason no video, skip
     if ~exist(fullVidName)
+      contacts{i}.labels(:) = -1;
       continue
     end
 
@@ -104,27 +105,27 @@ function [newContacts] =videos_to_npy(contacts, videoDir, saveDir, writeYes)
     % ---------------------------------------------------------------------
         %Edge detection to determine if whisker in frame ----------------------
     newRel = zeros(1, numel(relevantIdx));
-    for k = 1:numel(relevantIdx)
-        findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
-        eFrame = imbinarize(findFrame, 'adaptive', 'Sensitivity', 0.6); % See docs on imbinarize, but basically we want
-        % to get an image that's all intensity values of 1s or 0s. This
-        % will make the whisker detection more robust across different
-        % contrast
-        eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
-        topSide = mean(mean(eFrameClose(1:15,1:46)));
-        rightSide = mean(mean(eFrameClose(1:46,47:61)));
-        %         avg = mean(topSide + rightSide);
-        %         averages(avgIter) = avg;
-        %         avgIter = avgIter + 1;
-        if mean(topSide + rightSide) < 2.99 && contacts{i}.labels(relevantIdx(k)) == 3
-            contacts{i}.labels(relevantIdx(k)) = 2;
-        elseif contacts{i}.labels(relevantIdx(k)) == 2
-            %Nothing 
-        else 
-            contacts{i}.labels(relevantIdx(k)) = 0;
-            newRel(k) = 1;
-        end
-    end
+%     for k = 1:numel(relevantIdx)
+%         findFrame = videoArray.frames(relevantIdx(k)).cdata(:,:,1);
+%         eFrame = imbinarize(findFrame, 'adaptive', 'Sensitivity', 0.6); % See docs on imbinarize, but basically we want
+%         % to get an image that's all intensity values of 1s or 0s. This
+%         % will make the whisker detection more robust across different
+%         % contrast
+%         eFrameClose = eFrame((poleBox(1)):(poleBox(2)),(poleBox(3)):(poleBox(4)));
+%         topSide = mean(mean(eFrameClose(1:15,1:46)));
+%         rightSide = mean(mean(eFrameClose(1:46,47:61)));
+%         %         avg = mean(topSide + rightSide);
+%         %         averages(avgIter) = avg;
+%         %         avgIter = avgIter + 1;
+%         if mean(topSide + rightSide) < 2.99 && contacts{i}.labels(relevantIdx(k)) == 3
+%             contacts{i}.labels(relevantIdx(k)) = 2;
+%         elseif contacts{i}.labels(relevantIdx(k)) == 2
+%             %Nothing 
+%         else 
+%             contacts{i}.labels(relevantIdx(k)) = 0;
+%             newRel(k) = 1;
+%         end
+%     end
     relevantIdx(newRel == 1) = [];
     % ---------------------------------------------------------------------
     

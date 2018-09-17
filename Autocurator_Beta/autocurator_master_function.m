@@ -1,9 +1,9 @@
 % AUTOCURATOR_MASTER_FUNCTION(VID_DIR, T, CONTACTARRAY, JOBNAME) takes an input of a directory of
 % your videos, a T array, and an empty contact array, and attempts to automatically curate them frame by frame using a
 % convolutional neural network specified in MODEL
-function [contacts] = autocurator_master_function(videoDir, tArray, contactArray)
+function [contacts] = autocurator_master_function(videoDir, tArray, contactArray, jobName)
 %% SECTION CONTROL
-JOB_NAME = 'Pipeline_104';
+JOB_NAME = 'Pipeline_124';
 INPUT_DATA_FORMAT = 'distance';
 PIXEL_DETECTION =       1;
 MAKE_NPY =              1;
@@ -38,7 +38,9 @@ WRITE_CONTACTS =        1;
   saveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Datasets';
   % Place to save curated datasets
   newSaveDir = 'C:\SuperUser\CNN_Projects\Phil_Pipeline\Curated_Datasets';
-  jobName = JOB_NAME;
+  if nargin < 4
+    jobName = JOB_NAME;
+  end
 
   %% (1) Input checks and base variables
 %   if exist(model) ~= 2
@@ -144,7 +146,8 @@ WRITE_CONTACTS =        1;
 
   %% (8) Finish 
   % Use to clear needed directories 
-  clearDir = input('Do you want to clear data directories? [Y/N] ', 's');
+  %clearDir = input('Do you want to clear data directories? [Y/N] ', 's');
+  clearDir = 'Y';
   % Clearing section below
   if strcmpi(clearDir, 'Y')
       system(['del /q ' saveDir])
