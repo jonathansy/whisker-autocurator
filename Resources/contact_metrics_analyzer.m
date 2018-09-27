@@ -88,7 +88,9 @@ function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
     else
         manOnsetPts = [];
     end
-    if ~isempty(autoPoints) && ~isempty(manPoints)
+    if isempty(commonTouches) 
+        agreeNum(i) = 0;
+    elseif ~isempty(autoPoints) && ~isempty(manPoints)
         commonOnset = find(diff(commonTouches) > 1);
         commonOffset = commonOnset;
         commonOnset = commonOnset + 1;
@@ -113,6 +115,7 @@ function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
             offsetDelta(j) = abs(autoDiff - manDiff);
         end
         onsetDiff(i) = mean(onsetDelta);
+        offsetDiff(i) = mean(offsetDelta);
     else
         agreeNum(i) = 0;
     end

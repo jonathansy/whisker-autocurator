@@ -28,7 +28,7 @@ WRITE_CONTACTS =        1;
   autocuratorPath = 'C:\SuperUser\Documents\GitHub\whisker-autocurator';
   % Data center in which to process data. us-west1 (Oregon) is closest but
   % us-central1 (Iowa) or us-east1 (South Carolina) is required to use TPUs and best GPUs
-  region = 'us-east1';
+  region = 'us-west1';
   % Location of .yaml file used by Google Cloud for configuration settigns
   configFile = 'C:\Users\shires\AppData\Local\Google\Cloud_SDK\trainer\cloudml-gpu.yaml';
   % Model Path lists the location on the cloud where the training model is
