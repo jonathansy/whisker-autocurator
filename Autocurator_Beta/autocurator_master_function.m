@@ -3,11 +3,11 @@
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray, jobName)
 %% SECTION CONTROL
-JOB_NAME = 'Pipeline_124';
+JOB_NAME = 'Pipeline_130';
 INPUT_DATA_FORMAT = 'distance';
-PIXEL_DETECTION =       1;
-MAKE_NPY =              1;
-UPLOAD =                1;
+PIXEL_DETECTION =       0;
+MAKE_NPY =              0;
+UPLOAD =                0;
 PROCESS_AND_DOWNLOAD =  1;
 PICKLE_TO_NPY =         1;
 WRITE_CONTACTS =        1;
@@ -28,7 +28,7 @@ WRITE_CONTACTS =        1;
   autocuratorPath = 'C:\SuperUser\Documents\GitHub\whisker-autocurator';
   % Data center in which to process data. us-west1 (Oregon) is closest but
   % us-central1 (Iowa) or us-east1 (South Carolina) is required to use TPUs and best GPUs
-  region = 'us-west1';
+  region = 'us-east1';
   % Location of .yaml file used by Google Cloud for configuration settigns
   configFile = 'C:\Users\shires\AppData\Local\Google\Cloud_SDK\trainer\cloudml-gpu.yaml';
   % Model Path lists the location on the cloud where the training model is
@@ -111,8 +111,8 @@ WRITE_CONTACTS =        1;
                          jobName);
                      
  if PROCESS_AND_DOWNLOAD == true
-     system(gcloudCmd)
-     pause(1200)
+     %system(gcloudCmd)
+     %pause(1200)
  end
 
   %% (5b) Call Python code to use neural network and train on local computer

@@ -33,7 +33,7 @@ function write_to_contact_array(npLocation, contactLabels, contactArray, tArray)
       % A negative one indicates that the trial array had no data
       % and we should skip this trial
     elseif sum(find(contactPoints==2)) == 0
-        cArray.contacts{i}.contactInds{1} = 'Skipped';
+        cArray.contacts{i}.contactInds{1} = [];
         cArray.contacts{i}.trialNum = contactLabels{i}.trialNum;
         continue
       % Indicates we don't need to do anything here

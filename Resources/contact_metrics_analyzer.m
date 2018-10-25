@@ -2,11 +2,13 @@
 % for comparing the autocurated version of a contact array with the manual
 % version. Can be adapted for different contact array forms. Please supply
 % full paths to contact arrays.
-function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
+function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA, tArray)
   autoCon = load(autoConTA);
   manCon = load(manualConTA);
+  T = load(tArray);
   autoCon = autoCon.contacts;
   manCon = manCon.contacts;
+  T = T.T;
   % If sizes don't match then the arrays can't be fairly compared
   if length(autoCon) ~= length(manCon)
     error('Contact array size does not match')
@@ -21,6 +23,8 @@ function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
   onsetDiff = zeros(numTrials, 1); % Average difference between touch onset of agreed touches (in ms)
   offsetDiff = zeros(numTrials, 1); % Average difference between touch offset of agreed touches (in ms)
   %touchDiff = zeros(numTrials, 1); % Total number of touches in trial disagreed upon
+  figure(1)
+  hold on
   for i = 1:numTrials
       try
           autoPoints = autoCon{i}.contactInds{1};
@@ -66,6 +70,8 @@ function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
     falseTouch(i) = numel(autoPoints) - numel(commonTouches);
     falseNonTouch(i) = numel(manPoints) - numel(commonTouches);
     agreePct(i) = 100*((4000 - falseTouch(i) - falseNonTouch(i))/4000);
+    vel = nanmean(abs(diff((T.trials{i}.whiskerTrial.distanceToPoleCenter{1}))));
+    scatter(vel, agreePct(i), 70, 'r', '.');
 
     % Find onsets
     if ~isempty(autoPoints)
@@ -121,6 +127,10 @@ function [metrics] = contact_metrics_analyzer(autoConTA, manualConTA)
     end
   end
   % Calcualte statistics
+  axis([0 0.08 75 100])
+  xlabel('Velocity')
+  ylabel('Agreement')
+  %hold off
   metrics.percentAgreedPoints = nanmean(agreePct);
   metrics.totalFalseTouchErrors = nansum(falseTouch);
   metrics.totalMissedTouchErrors = nansum(falseNonTouch);
