@@ -162,7 +162,7 @@ switch inType
             numPoints = length(WT.dist2pole);
             tContacts = zeros(1, numPoints);
             barPos = zeros(2, numPoints);
-            relFrames = [transpose(WT.poleMovingFrames) WT.poleUpFrames];
+            relFrames = [WT.poleMovingFrames WT.poleUpFrames];
             for j = 1:numPoints
                 currentPoint = WT.dist2pole(j);
                 % Check if pole is up
@@ -193,10 +193,8 @@ switch inType
                         % Valid if change in direction
                         tContacts(j) = 2;
                     elseif avgSpeed < 1.9
-                        % Valid if speed is slow
                         tContacts(j) = 2;
                     else
-                        % Too fast, same direction, invalid
                         tContacts(j) = 0;
                     end
                     

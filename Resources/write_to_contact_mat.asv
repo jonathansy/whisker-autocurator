@@ -93,4 +93,4 @@ function write_to_contact_mat(npLocation, contactLabels)
   % Save the contact array
   contacts = cArray.contacts;
   %params = cArray.params;
-  save('Z:\Users\Jonathan_Sy\JK_Pipeline\JK_Contacts_30.mat', 'contacts')
+  save('Z:\Users\Jonathan_Sy\JK_Pipeline\JK_Contacts_27.mat', 'contacts')

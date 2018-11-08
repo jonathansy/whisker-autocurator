@@ -6,30 +6,31 @@ import argparse
 
 
 def numpy_to_tfrecords(np_location, records_name):
+    records_name = records_name + '.tfrecords'
+    print('Writing to ' + records_name)
     np_list = os.listdir(np_location)
-    writer = tf.python_io.TFRecordWriter(records_name)
-    for np_file in np_list:
-        np_fname = os.path.basename(np_file)
-        if np_fname[6:10] == 'Data':
-            label_name = np_fname[0:5] + '_Labels' + np_fname[10:]
-            np_labels = np.load(os.path.join(np_location, label_name))
-            np_array = np.load(os.path.join(np_location,np_file))
-            print('Made it to converter')
+    with tf.python_io.TFRecordWriter(records_name) as writer:
+        for np_file in np_list:
+            np_fname = os.path.basename(np_file)
+            if np_fname[6:10] == 'Data':
+                label_name = np_fname[0:5] + '_Labels' + np_fname[10:]
+                np_labels = np.load(os.path.join(np_location, label_name))
+                np_array = np.load(os.path.join(np_location,np_file))
+                print('Converting ' + label_name)
 
-            flat_im = np_array.flatten()
-            flat_im = flat_im.tostring()
-            labels = np_labels.flatten()
-            labels = labels.astype(int)
+                flat_im = np_array.flatten()
+                flat_im = flat_im.tostring()
+                labels = np_labels.flatten()
+                labels = labels.astype(int)
 
-            feature = {}
-            feature['ximage'] = tf.train.Feature(bytes_list=tf.train.BytesList(value=[flat_im]))
-            feature['ylabel'] = tf.train.Feature(int64_list=tf.train.Int64List(value=labels))
+                feature = {}
+                feature['ximage'] = tf.train.Feature(bytes_list=tf.train.BytesList(value=[flat_im]))
+                feature['ylabel'] = tf.train.Feature(int64_list=tf.train.Int64List(value=labels))
 
-            combined = tf.train.Example(features=tf.train.Features(feature=feature))
-            serialized = combined.SerializeToString()
+                combined = tf.train.Example(features=tf.train.Features(feature=feature))
+                serialized = combined.SerializeToString()
 
-            writer.write(serialized)
-    writer.close()
+                writer.write(serialized)
 
 
 if __name__ == '__main__':

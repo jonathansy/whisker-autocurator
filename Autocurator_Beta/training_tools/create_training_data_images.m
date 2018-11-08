@@ -5,7 +5,7 @@ function create_training_data_images(tArray, cArray, sizeROI, vidPath, transferD
   bitSize = 8;
   maxRamGB = 1;
   % Derived variables
-  framesPerSet = round(maxRamGB*(1024^3))/(2*bitSize*sizeROI*sizeROI);
+  framesPerSet = 1024;
   numTrials = length(cArray);
   roiRadius = round((sizeROI-1)/2);
 
@@ -17,7 +17,7 @@ function create_training_data_images(tArray, cArray, sizeROI, vidPath, transferD
   maxDataset = [];
   maxLabels = [];
 
-  for i = 1:numTrials
+  for i = 1:200
     % Find indices of frames we need to curate
     try
         labels = cArray{i}.contactInds{1};

@@ -146,8 +146,8 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
     
     % Prep loop
     numRelFrames = numel(relevantIdx);
-    finalMat = zeros(numRelFrames,61);
-    finalMat = repmat(finalMat, 1,1,61);
+    finalMat = zeros(numRelFrames,81);
+    finalMat = repmat(finalMat, 1,1,81);
 
     % Frame loop
     for k = 1:numRelFrames
@@ -158,7 +158,7 @@ function [newContacts] =videos_to_npy_alt(contacts, videoDir, saveDir, writeYes)
             xPole = round(xPole, 0);
             yPole = barPos(2, curIdx);
             yPole = round(yPole, 0);
-            poleBox = [yPole-30, yPole+30, xPole-30, xPole+30];
+            poleBox = [yPole-40, yPole+40, xPole-40, xPole+40];
             % Out of bounds check 
             [yDim, xDim] = size(curFrame);
             if poleBox(1) < 1

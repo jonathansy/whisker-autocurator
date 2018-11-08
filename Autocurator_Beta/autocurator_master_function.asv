@@ -3,14 +3,13 @@
 % convolutional neural network specified in MODEL
 function [contacts] = autocurator_master_function(videoDir, tArray, contactArray, jobName)
 %% SECTION CONTROL
-JOB_NAME = 'JK_Pipeline_004';
+JOB_NAME = 'JK_Pipeline_001';
 INPUT_DATA_FORMAT = 'distance_WT';
 PIXEL_DETECTION =       0;
 MAKE_NPY =              0;
 UPLOAD =                0;
-PROCESS =               0;
-DOWNLOAD =              0;
-PICKLE_TO_NPY =         0;
+PROCESS=  1;
+PICKLE_TO_NPY =         1;
 WRITE_CONTACTS =        1;
 
 %% SETTINGS
@@ -123,7 +122,7 @@ WRITE_CONTACTS =        1;
 
   %% (6) Remove touch predictions from Google Cloud
   %gcloudBucket = 'gs://whisker_training_data';
-  downloadName = ['/Data/JK_Curation/*.pickle'];
+  downloadName = ['/Data/*.pickle'];
   gsutilDownCmd = sprintf('gsutil -m cp %s%s %s',...
                          gcloudBucket, downloadName, newSaveDir);
                      
@@ -148,7 +147,7 @@ WRITE_CONTACTS =        1;
   %% (8) Finish 
   % Use to clear needed directories 
   %clearDir = input('Do you want to clear data directories? [Y/N] ', 's');
-  clearDir = 'N';
+  clearDir = 'Y';
   % Clearing section below
   if strcmpi(clearDir, 'Y')
       system(['del /q ' saveDir])

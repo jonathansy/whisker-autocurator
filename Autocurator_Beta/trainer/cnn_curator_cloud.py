@@ -37,8 +37,8 @@ tf.reset_default_graph()
 
 def load_image_data(data_path):
     # Shape of images (temporarily hard-coded)
-    img_rows = 61
-    img_cols = 61
+    img_rows = 81
+    img_cols = 81
     # Parses through data on cloud and unpickles it
     # Import Data
     with file_io.FileIO(data_path, mode='rb') as np_file:
